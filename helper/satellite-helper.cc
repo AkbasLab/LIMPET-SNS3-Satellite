@@ -380,6 +380,7 @@ SatHelper::SetGroupHelper (Ptr<SatGroupHelper> groupHelper)
 {
   NS_LOG_FUNCTION (this << groupHelper);
   m_groupHelper = groupHelper;
+  m_groupHelper->SetAntennaGainPatterns (m_antennaGainPatterns);
 }
 
 void

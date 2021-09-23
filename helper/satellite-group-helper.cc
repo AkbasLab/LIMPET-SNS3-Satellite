@@ -54,7 +54,7 @@ SatGroupHelper::SatGroupHelper ()
   NS_LOG_FUNCTION (this);
 
   // Create antenna gain patterns
-  m_antennaGainPatterns = CreateObject<SatAntennaGainPatternContainer> ();
+  m_antennaGainPatterns = nullptr;
 }
 
 void
@@ -294,9 +294,24 @@ SatGroupHelper::GetGroups ()
   return m_groupsList;
 }
 
+void
+SatGroupHelper::SetAntennaGainPatterns (Ptr<SatAntennaGainPatternContainer> antennaGainPatterns)
+{
+  NS_LOG_FUNCTION (this << antennaGainPatterns);
+
+  m_antennaGainPatterns == antennaGainPatterns;
+}
+
 Ptr<SatAntennaGainPatternContainer>
 SatGroupHelper::GetAntennaGainPatterns ()
 {
+  NS_LOG_FUNCTION (this);
+
+  if (m_antennaGainPatterns == nullptr)
+    {
+      NS_FATAL_ERROR (this << " No antenna gain patterns has been assigned yet!");
+    }
+
   return m_antennaGainPatterns;
 }
 

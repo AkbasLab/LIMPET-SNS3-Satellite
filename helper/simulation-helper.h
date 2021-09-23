@@ -645,6 +645,8 @@ protected:
   void SetupOutputPath ();
 
 private:
+  void EnsureSatHelper ();
+
   Ptr<SatHelper> m_satHelper;
   Ptr<SatStatsHelperContainer> m_statContainer;
   Ptr<SatTrafficHelper> m_trafficHelper;

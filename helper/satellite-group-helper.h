@@ -149,6 +149,8 @@ public:
    */
   std::list<uint32_t> GetGroups ();
 
+  void SetAntennaGainPatterns (Ptr<SatAntennaGainPatternContainer>);
+
   /**
    * \return Get the antenna gain patterns
    */

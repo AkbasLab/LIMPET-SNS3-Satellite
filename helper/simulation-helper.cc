@@ -1155,6 +1155,17 @@ SimulationHelper::GetTrafficHelper ()
   return m_trafficHelper;
 }
 
+void
+SimulationHelper::EnsureSatHelper ()
+{
+  NS_LOG_FUNCTION (this);
+
+  if (!m_satHelper)
+    {
+      m_satHelper = CreateObject<SatHelper> ();
+    }
+}
+
 Ptr<SatGroupHelper>
 SimulationHelper::GetGroupHelper ()
 {
@@ -1163,6 +1174,8 @@ SimulationHelper::GetGroupHelper ()
   if (!m_groupHelper)
     {
       m_groupHelper = CreateObject<SatGroupHelper> ();
+      EnsureSatHelper ();
+      m_satHelper->SetGroupHelper (m_groupHelper);
     }
 
   return m_groupHelper;
@@ -1220,11 +1233,7 @@ SimulationHelper::CreateSatScenario (SatHelper::PreDefinedScenario_t scenario, c
   // Set final output path
   SetupOutputPath ();
 
-  m_satHelper = CreateObject<SatHelper> ();
-
-  m_satHelper->SetGroupHelper (GetGroupHelper ()); // If not done in user scenario, group helper is created here
-  m_satHelper->SetAntennaGainPatterns (m_groupHelper->GetAntennaGainPatterns ());
-  m_satHelper->GetBeamHelper ()->SetAntennaGainPatterns (m_groupHelper->GetAntennaGainPatterns ());
+  EnsureSatHelper ();
 
   // Set UT position allocators, if any
   if (!m_enableInputFileUtListPositions)
@@ -1267,7 +1276,7 @@ SimulationHelper::CreateSatScenario (SatHelper::PreDefinedScenario_t scenario, c
             }
         }
 
-      std::map<uint32_t, std::vector<std::pair<GeoCoordinate, uint32_t>>> additionalNodes = m_groupHelper->GetAdditionalNodesPerBeam ();
+      std::map<uint32_t, std::vector<std::pair<GeoCoordinate, uint32_t>>> additionalNodes = GetGroupHelper ()->GetAdditionalNodesPerBeam ();
       for (std::map<uint32_t, std::vector<std::pair<GeoCoordinate, uint32_t>>>::iterator it = additionalNodes.begin(); it != additionalNodes.end(); it++)
         {
           if (!IsBeamEnabled (it->first))
@@ -1306,7 +1315,7 @@ SimulationHelper::CreateSatScenario (SatHelper::PreDefinedScenario_t scenario, c
 
   NS_LOG_INFO (ss.str ());
 
-  m_groupHelper->Init (m_satHelper->UtNodes ());
+  GetGroupHelper ()->Init (m_satHelper->UtNodes ());
 
   return m_satHelper;
 }
