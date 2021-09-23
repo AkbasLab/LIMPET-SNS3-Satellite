@@ -40,6 +40,8 @@ SatPacketTrace::SatPacketTrace ()
 
   AsciiTraceHelper asciiTraceHelper;
 
+  NS_LOG_DEBUG (this << "Packet trace file name is: " << m_fileName);
+
   std::stringstream outputPath;
   outputPath << Singleton<SatEnvVariables>::Get ()->GetOutputPath () << "/" << m_fileName << ".log";
 

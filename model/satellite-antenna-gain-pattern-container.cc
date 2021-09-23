@@ -19,12 +19,20 @@
  */
 
 #include <sstream>
+#include <dirent.h>
+#include <string.h>
+#include <errno.h>
+
 #include "ns3/log.h"
-#include "satellite-antenna-gain-pattern-container.h"
+#include "ns3/string.h"
 #include "ns3/singleton.h"
 #include "ns3/satellite-env-variables.h"
+#include "satellite-antenna-gain-pattern-container.h"
+
 
 NS_LOG_COMPONENT_DEFINE ("SatAntennaGainPatternContainer");
+
+const std::string numbers{"0123456789"};
 
 namespace ns3 {
 
@@ -36,38 +44,104 @@ SatAntennaGainPatternContainer::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SatAntennaGainPatternContainer")
     .SetParent<Object> ()
-    .AddConstructor<SatAntennaGainPatternContainer> ();
+    .AddConstructor<SatAntennaGainPatternContainer> ()
+    .AddAttribute ("PatternsFolder", "Sub-folder in 'antennapatterns' containing the gains definition for each beam",
+                   StringValue ("SatAntennaGain72Beams"),
+                   MakeStringAccessor (&SatAntennaGainPatternContainer::m_patternsFolder),
+                   MakeStringChecker ());
   return tid;
 }
+
+
+TypeId
+SatAntennaGainPatternContainer::GetInstanceTypeId () const
+{
+  NS_LOG_FUNCTION (this);
+  return GetTypeId ();
+}
+
 
 SatAntennaGainPatternContainer::SatAntennaGainPatternContainer ()
 {
   NS_LOG_FUNCTION (this);
 
-  /**
-   * TODO: To change the reference system, these hard coded paths
-   * and filenames may have to be changed! One way could be to hard
-   * code the antenna pattern names, but change the input folder
-   * according to the wanted reference system.
-   */
-  std::string dataPath = Singleton<SatEnvVariables>::Get ()->LocateDataDirectory ();
-  std::string path = dataPath + "/antennapatterns/SatAntennaGain72Beams_";
+  ObjectBase::ConstructSelf (AttributeConstructionList ());
 
-  // Note, that the beam ids start from 1
-  for (uint32_t i = 1; i <= NUMBER_OF_BEAMS; ++i)
+  std::string dataPath {Singleton<SatEnvVariables>::Get ()->LocateDataDirectory ()};
+  std::string patternsFolder = dataPath + "/antennapatterns/" + m_patternsFolder;
+
+  NS_LOG_INFO (this << " directory for antenna patterns set to " << patternsFolder);
+
+  if (!Singleton<SatEnvVariables>::Get ()->IsValidDirectory (patternsFolder))
     {
-      std::ostringstream ss;
-      ss << i;
-      std::string filePathName = path + ss.str () + ".txt";
-      Ptr<SatAntennaGainPattern> gainPattern = CreateObject<SatAntennaGainPattern> (filePathName);
+      NS_FATAL_ERROR (this << " directory " << m_patternsFolder << " not found in antennapatterns folder");
+    }
 
-      std::pair<std::map<uint32_t, Ptr<SatAntennaGainPattern> >::iterator, bool> ret;
-      ret = m_antennaPatternMap.insert (std::pair<uint32_t, Ptr<SatAntennaGainPattern> > (i, gainPattern));
+  DIR *dir;
+  struct dirent *ent;
+  std::string prefix;
+  if ((dir = opendir (patternsFolder.c_str ())) != nullptr)
+    {
+      /* process all the files and directories within patternsFolder */
+      while ((ent = readdir (dir)) != nullptr) {
+        std::string filename {ent->d_name};
+        std::size_t pathLength = filename.length ();
+        if (pathLength > 4)
+          {
+            pathLength -= 4;  // Size of .txt extention
+            if (filename.substr (pathLength) == ".txt")
+              {
+                std::string num, stem = filename.substr (0, pathLength);
+                std::size_t found = stem.find_last_not_of (numbers);
+                if (found == std::string::npos)
+                  {
+                    num = stem;
+                    stem.erase (0);
+                  }
+                else
+                  {
+                    num = stem.substr (found + 1);
+                    stem.erase (found + 1);
+                  }
 
-      if (ret.second == false)
-        {
-          NS_FATAL_ERROR (this << " an antenna pattern for beam " << i << " already exists!");
-        }
+                if (prefix.empty())
+                  {
+                    prefix = stem;
+                  }
+
+                if (prefix != stem)
+                  {
+                    NS_FATAL_ERROR (this << " mixing different prefix for antenna pattern names: " << prefix << " and " << stem);
+                  }
+
+                std::string filePath = patternsFolder + "/" + filename;
+                std::istringstream ss {num};
+                uint32_t i;
+                ss >> i;
+                if (ss.bad ())
+                  {
+                    NS_FATAL_ERROR (this << " unable to find beam number in " << filePath << " file name");
+                  }
+
+                Ptr<SatAntennaGainPattern> gainPattern = CreateObject<SatAntennaGainPattern> (filePath);
+
+                std::pair<std::map<uint32_t, Ptr<SatAntennaGainPattern> >::iterator, bool> ret;
+                ret = m_antennaPatternMap.insert (std::pair<uint32_t, Ptr<SatAntennaGainPattern> > (i, gainPattern));
+
+                if (ret.second == false)
+                  {
+                    NS_FATAL_ERROR (this << " an antenna pattern for beam " << i << " already exists!");
+                  }
+              }
+          }
+      }
+      closedir (dir);
+    }
+  else
+    {
+      /* could not open directory */
+      char const* error = strerror(errno);
+      NS_FATAL_ERROR (this << " unable to open directory " << m_patternsFolder << ": " << error);
     }
 }
 
@@ -98,9 +172,10 @@ SatAntennaGainPatternContainer::GetBestBeamId (GeoCoordinate coord) const
   double bestGain (-100.0);
   uint32_t bestId (0);
 
-  for (uint32_t i = 1; i <= NUMBER_OF_BEAMS; ++i)
+  for (auto const& entry : m_antennaPatternMap)
     {
-      double gain = m_antennaPatternMap.at (i)->GetAntennaGain_lin (coord);
+      uint32_t i = entry.first;
+      double gain = entry.second->GetAntennaGain_lin (coord);
 
       // The antenna pattern has returned a NAN gain. This means
       // that this position is not valid. Return 0, which is not a valid beam id.

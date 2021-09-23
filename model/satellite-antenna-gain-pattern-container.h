@@ -45,6 +45,7 @@ public:
    * \return the object TypeId
    */
   static TypeId GetTypeId (void);
+  TypeId GetInstanceTypeId () const;
 
   /**
    * Default constructor.
@@ -74,12 +75,7 @@ public:
   uint32_t GetBestBeamId (GeoCoordinate coord) const;
 
 private:
-  /**
-   * \brief Definition of number of beams (72-beam reference scenario).
-   * Note: to change the reference system this has to be changed
-   * accordingly.
-   */
-  static const uint32_t NUMBER_OF_BEAMS = 72;
+  std::string m_patternsFolder;
 
   /**
    * Container of antenna patterns

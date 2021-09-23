@@ -335,7 +335,6 @@ SatEnvVariables::LocateDirectory (std::string initialPath)
   NS_LOG_FUNCTION (this);
 
   std::string path;
-  bool directoryFound = false;
 
   NS_LOG_INFO ("Initial path " << initialPath);
 
@@ -349,24 +348,18 @@ SatEnvVariables::LocateDirectory (std::string initialPath)
         }
 
       dataPath << initialPath;
+      path = dataPath.str ();
 
-      NS_LOG_INFO ("Checking " << dataPath.str ());
+      NS_LOG_INFO ("Checking " << path);
 
-      if (IsValidDirectory (dataPath.str ()))
+      if (IsValidDirectory (path))
         {
-          NS_LOG_INFO ("Data directory located in " << dataPath.str ());
-          path = dataPath.str ();
-          directoryFound = true;
-          break;
+          NS_LOG_INFO ("Data directory located in " << path);
+          return path;
         }
     }
 
-  if (!directoryFound)
-    {
-      NS_FATAL_ERROR ("SatEnvVariables::LocateDirectory - Directory not found within " << m_levelsToCheck << " levels: " << initialPath);
-    }
-
-  return path;
+  NS_FATAL_ERROR ("SatEnvVariables::LocateDirectory - Directory not found within " << m_levelsToCheck << " levels: " << initialPath);
 }
 
 std::string
@@ -375,7 +368,6 @@ SatEnvVariables::LocateFile (std::string initialPath)
   NS_LOG_FUNCTION (this);
 
   std::string path;
-  bool fileFound = false;
 
   NS_LOG_INFO ("Initial path " << initialPath);
 
@@ -389,24 +381,18 @@ SatEnvVariables::LocateFile (std::string initialPath)
         }
 
       dataPath << initialPath;
+      path = dataPath.str ();
 
-      NS_LOG_INFO ("Checking " << dataPath.str ());
+      NS_LOG_INFO ("Checking " << path);
 
-      if (IsValidFile (dataPath.str ()))
+      if (IsValidFile (path))
         {
-          NS_LOG_INFO ("Data directory located in " << dataPath.str ());
-          path = dataPath.str ();
-          fileFound = true;
-          break;
+          NS_LOG_INFO ("Data directory located in " << path);
+          return path;
         }
     }
 
-  if (!fileFound)
-    {
-      NS_FATAL_ERROR ("SatEnvVariables::LocateFile - File not found within " << m_levelsToCheck << " levels: " << initialPath);
-    }
-
-  return path;
+  NS_FATAL_ERROR ("SatEnvVariables::LocateFile - File not found within " << m_levelsToCheck << " levels: " << initialPath);
 }
 
 std::string
