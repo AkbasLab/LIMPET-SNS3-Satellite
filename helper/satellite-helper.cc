@@ -388,6 +388,10 @@ SatHelper::SetAntennaGainPatterns (Ptr<SatAntennaGainPatternContainer> antennaGa
 {
   NS_LOG_FUNCTION (this);
   m_antennaGainPatterns = antennaGainPatterns;
+  if (m_groupHelper)
+    {
+      m_groupHelper->SetAntennaGainPatterns (antennaGainPatterns);
+    }
 }
 
 Ptr<SatUserHelper>

@@ -299,7 +299,7 @@ SatGroupHelper::SetAntennaGainPatterns (Ptr<SatAntennaGainPatternContainer> ante
 {
   NS_LOG_FUNCTION (this << antennaGainPatterns);
 
-  m_antennaGainPatterns == antennaGainPatterns;
+  m_antennaGainPatterns = antennaGainPatterns;
 }
 
 Ptr<SatAntennaGainPatternContainer>
