@@ -239,11 +239,8 @@ SatHelper::SatHelper ()
   m_antennaGainPatterns = CreateObject<SatAntennaGainPatternContainer> ();
   m_beamHelper->SetAntennaGainPatterns (m_antennaGainPatterns);
 
-  Ptr<SatSGP4MobilityModel> mobility = geoSatNode->GetObject<SatSGP4MobilityModel> ();
-  if (mobility)
-    {
-      m_antennaGainPatterns->ConfigureBeamsMobility (mobility);
-    }
+  Ptr<SatMobilityModel> mobility = geoSatNode->GetObject<SatMobilityModel> ();
+  m_antennaGainPatterns->ConfigureBeamsMobility (mobility);
 
   if (m_satMobilitySGP4Enabled == true && m_beamHelper->GetPropagationDelayModelEnum () != SatEnums::PD_CONSTANT_SPEED)
     {

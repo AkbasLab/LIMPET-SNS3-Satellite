@@ -198,30 +198,40 @@ SatAntennaGainPatternContainer::GetBestBeamId (GeoCoordinate coord) const
 uint32_t
 SatAntennaGainPatternContainer::GetNAntennaGainPatterns () const
 {
+  NS_LOG_FUNCTION (this);
+
   // Note, that now we assume that all the antenna patterns are created
   // regardless of how many beams are actually simulated.
   return m_antennaPatternMap.size ();
 }
 
 void
-SatAntennaGainPatternContainer::ConfigureBeamsMobility (Ptr<SatSGP4MobilityModel> mobility)
+SatAntennaGainPatternContainer::ConfigureBeamsMobility (Ptr<SatMobilityModel> mobility)
 {
-  std::string dataPath {Singleton<SatEnvVariables>::Get ()->LocateDataDirectory ()};
-  std::string originDateFilename = dataPath + "/antennapatterns/" + m_patternsFolder + "/origin.timestamp";
+  NS_LOG_FUNCTION (this << mobility);
 
-  std::ifstream originDateFile {originDateFilename.c_str ()};
-  NS_ABORT_MSG_UNLESS (originDateFile.is_open (), "SatAntennaGainPatternContainer::ConfigureBeamsMobility - origin.timestamp unreadable; are these beams meant to be mobile?");
+  GeoCoordinate initial = mobility->GetGeoPosition ();
 
-  std::string originDate;
-  originDateFile >> originDate;
+  Ptr<SatSGP4MobilityModel> sgp4Mobility = DynamicCast<SatSGP4MobilityModel> (mobility);
+  if (sgp4Mobility != nullptr)
+    {
+      std::string dataPath {Singleton<SatEnvVariables>::Get ()->LocateDataDirectory ()};
+      std::string originDateFilename = dataPath + "/antennapatterns/" + m_patternsFolder + "/origin.timestamp";
 
-  Ptr<SatSGP4MobilityModel> model = CopyObject<SatSGP4MobilityModel> (mobility);
-  model->SetStartTime (JulianDate (originDate)); 
-  GeoCoordinate initial = model->GetGeoPosition ();
+      std::ifstream originDateFile {originDateFilename.c_str ()};
+      NS_ABORT_MSG_UNLESS (originDateFile.is_open (), "SatAntennaGainPatternContainer::ConfigureBeamsMobility - origin.timestamp unreadable; are these beams meant to be mobile?");
+
+      std::string originDate;
+      originDateFile >> originDate;
+
+      Ptr<SatSGP4MobilityModel> model = CopyObject<SatSGP4MobilityModel> (sgp4Mobility);
+      model->SetStartTime (JulianDate (originDate)); 
+      initial = model->GetGeoPosition ();
+    }
 
   for (auto const& entry : m_antennaPatternMap)
     {
-      entry.second->SetInitialSatellitePosition (initial);
+      entry.second->SetInitialSatellitePosition (mobility, initial);
     }
 }
 

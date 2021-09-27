@@ -352,7 +352,7 @@ SatSpotBeamPositionAllocator::GetNextGeoPosition () const
   // - elevation is not higher than threshold
   while ( ( bestBeamId != m_targetBeamId || std::isnan (elevation) || elevation < m_minElevationAngleInDeg ) && tries < MAX_TRIES)
     {
-      pos = agp->GetValidRandomPosition ();
+      pos = agp->GetValidRandomPosition ();  // FIXME: this assumes positions are created at the beginning of the simulation, while the satellite hasn't moved yet.
       bestBeamId = m_antennaGainPatterns->GetBestBeamId (pos);
 
       // Set the new position to the UT mobility

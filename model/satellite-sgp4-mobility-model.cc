@@ -29,7 +29,7 @@
 #include "ns3/string.h"
 #include "vector-extensions.h"
 
-NS_LOG_COMPONENT_DEFINE ("sat-sgp4-mobility-model");
+NS_LOG_COMPONENT_DEFINE ("SatSgp4MobilityModel");
 
 namespace ns3 {
 
