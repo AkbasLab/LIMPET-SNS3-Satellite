@@ -18,6 +18,7 @@
  * Author: Jani Puttonen <jani.puttonen@magister.fi>
  */
 
+#include <fstream>
 #include <sstream>
 #include <dirent.h>
 #include <string.h>
@@ -28,6 +29,7 @@
 #include "ns3/singleton.h"
 #include "ns3/satellite-env-variables.h"
 #include "satellite-antenna-gain-pattern-container.h"
+#include "satellite-sgp4-mobility-model.h"
 
 
 NS_LOG_COMPONENT_DEFINE ("SatAntennaGainPatternContainer");
@@ -74,7 +76,7 @@ SatAntennaGainPatternContainer::SatAntennaGainPatternContainer ()
 
   if (!Singleton<SatEnvVariables>::Get ()->IsValidDirectory (patternsFolder))
     {
-      NS_FATAL_ERROR (this << " directory " << m_patternsFolder << " not found in antennapatterns folder");
+      NS_FATAL_ERROR ("SatAntennaGainPatternContainer::SatAntennaGainPatternContainer directory " << m_patternsFolder << " not found in antennapatterns folder");
     }
 
   DIR *dir;
@@ -111,7 +113,7 @@ SatAntennaGainPatternContainer::SatAntennaGainPatternContainer ()
 
                 if (prefix != stem)
                   {
-                    NS_FATAL_ERROR (this << " mixing different prefix for antenna pattern names: " << prefix << " and " << stem);
+                    NS_FATAL_ERROR ("SatAntennaGainPatternContainer::SatAntennaGainPatternContainer mixing different prefix for antenna pattern names: " << prefix << " and " << stem);
                   }
 
                 std::string filePath = patternsFolder + "/" + filename;
@@ -120,7 +122,7 @@ SatAntennaGainPatternContainer::SatAntennaGainPatternContainer ()
                 ss >> i;
                 if (ss.bad ())
                   {
-                    NS_FATAL_ERROR (this << " unable to find beam number in " << filePath << " file name");
+                    NS_FATAL_ERROR ("SatAntennaGainPatternContainer::SatAntennaGainPatternContainer unable to find beam number in " << filePath << " file name");
                   }
 
                 Ptr<SatAntennaGainPattern> gainPattern = CreateObject<SatAntennaGainPattern> (filePath);
@@ -130,7 +132,7 @@ SatAntennaGainPatternContainer::SatAntennaGainPatternContainer ()
 
                 if (ret.second == false)
                   {
-                    NS_FATAL_ERROR (this << " an antenna pattern for beam " << i << " already exists!");
+                    NS_FATAL_ERROR ("SatAntennaGainPatternContainer::SatAntennaGainPatternContainer an antenna pattern for beam " << i << " already exists!");
                   }
               }
           }
@@ -141,7 +143,7 @@ SatAntennaGainPatternContainer::SatAntennaGainPatternContainer ()
     {
       /* could not open directory */
       char const* error = strerror(errno);
-      NS_FATAL_ERROR (this << " unable to open directory " << m_patternsFolder << ": " << error);
+      NS_FATAL_ERROR ("SatAntennaGainPatternContainer::SatAntennaGainPatternContainer unable to open directory " << m_patternsFolder << ": " << error);
     }
 }
 
@@ -181,7 +183,7 @@ SatAntennaGainPatternContainer::GetBestBeamId (GeoCoordinate coord) const
       // that this position is not valid. Return 0, which is not a valid beam id.
       if (std::isnan (gain))
         {
-          NS_FATAL_ERROR (this << " returned a NAN antenna gain value!");
+          NS_FATAL_ERROR ("SatAntennaGainPatternContainer::GetBestBeamId - Beam " << i << " returned a NAN antenna gain value!");
         }
       else if (gain > bestGain)
         {
@@ -199,6 +201,28 @@ SatAntennaGainPatternContainer::GetNAntennaGainPatterns () const
   // Note, that now we assume that all the antenna patterns are created
   // regardless of how many beams are actually simulated.
   return m_antennaPatternMap.size ();
+}
+
+void
+SatAntennaGainPatternContainer::ConfigureBeamsMobility (Ptr<SatSGP4MobilityModel> mobility)
+{
+  std::string dataPath {Singleton<SatEnvVariables>::Get ()->LocateDataDirectory ()};
+  std::string originDateFilename = dataPath + "/antennapatterns/" + m_patternsFolder + "/origin.timestamp";
+
+  std::ifstream originDateFile {originDateFilename.c_str ()};
+  NS_ABORT_MSG_UNLESS (originDateFile.is_open (), "SatAntennaGainPatternContainer::ConfigureBeamsMobility - origin.timestamp unreadable; are these beams meant to be mobile?");
+
+  std::string originDate;
+  originDateFile >> originDate;
+
+  Ptr<SatSGP4MobilityModel> model = CopyObject<SatSGP4MobilityModel> (mobility);
+  model->SetStartTime (JulianDate (originDate)); 
+  GeoCoordinate initial = model->GetGeoPosition ();
+
+  for (auto const& entry : m_antennaPatternMap)
+    {
+      entry.second->SetInitialSatellitePosition (initial);
+    }
 }
 
 } // namespace ns3

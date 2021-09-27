@@ -78,6 +78,19 @@ SatSGP4MobilityModel::SatSGP4MobilityModel ()
   SetStartTime (JulianDate (m_startStr));
 }
 
+SatSGP4MobilityModel::SatSGP4MobilityModel (const SatSGP4MobilityModel &other)
+  : m_tle1 (other.m_tle1),
+  m_tle2 (other.m_tle2),
+  m_sgp4_record (other.m_sgp4_record),
+  m_startStr (other.m_startStr),
+  m_updatePositionEachRequest (other.m_updatePositionEachRequest),
+  m_updatePositionPeriod (other.m_updatePositionPeriod),
+  m_timeLastUpdate (Time::Min ())
+{
+  NS_LOG_FUNCTION (this);
+  SetStartTime (JulianDate (m_startStr));
+}
+
 SatSGP4MobilityModel::~SatSGP4MobilityModel () { }
 
 JulianDate

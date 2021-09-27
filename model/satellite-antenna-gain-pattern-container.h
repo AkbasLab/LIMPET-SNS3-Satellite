@@ -26,6 +26,8 @@
 
 namespace ns3 {
 
+class SatSGP4MobilityModel;
+
 /**
  * \ingroup satellite
  *
@@ -73,6 +75,8 @@ public:
    * \return best beam id in the specified geo coordinate
    */
   uint32_t GetBestBeamId (GeoCoordinate coord) const;
+
+  void ConfigureBeamsMobility (Ptr<SatSGP4MobilityModel> mobility);
 
 private:
   std::string m_patternsFolder;

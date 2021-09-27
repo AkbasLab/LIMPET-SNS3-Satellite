@@ -80,12 +80,14 @@ public:
    * \return The gain value in linear format
    */
   double GetAntennaGain_lin (GeoCoordinate coord) const;
+  double GetAntennaGain_lin (GeoCoordinate coord, GeoCoordinate satellite) const;
 
   /**
    * \brief Get a valid random position under this spot-beam coverage.
    * \return A valid random GeoCoordinate
    */
   GeoCoordinate GetValidRandomPosition () const;
+  GeoCoordinate GetValidRandomPosition (GeoCoordinate satellite) const;
 
   /**
    * \brief Check if a given position is under this spot-beam coverage.
@@ -93,6 +95,9 @@ public:
    * \return Whether or not the given position is valid for this spot-beam
    */
   bool IsValidPosition (GeoCoordinate coord, TracedCallback<double> cb) const;
+  bool IsValidPosition (GeoCoordinate coord, GeoCoordinate satellite, TracedCallback<double> cb) const;
+
+  void SetInitialSatellitePosition (GeoCoordinate coord);
 
 private:
   /**
@@ -171,6 +176,12 @@ private:
    */
   static const std::string m_nanStringArray[4];
   std::vector<std::string> m_nanStrings;
+
+  /**
+   * Initial satellite position for beam shifting
+   */
+  GeoCoordinate m_initialSatellitePosition;
+  bool m_satellitePositionInitialized;
 };
 
 

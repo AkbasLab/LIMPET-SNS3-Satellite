@@ -60,6 +60,11 @@ public:
   SatSGP4MobilityModel ();
 
   /**
+   * @brief Copy constructor.
+   */
+  SatSGP4MobilityModel (const SatSGP4MobilityModel& other);
+
+  /**
    * @brief Destructor.
    */
   virtual ~SatSGP4MobilityModel ();

@@ -218,6 +218,21 @@ void SatAntennaGainPattern::ReadAntennaPatternFromFile (std::string filePathName
 }
 
 
+GeoCoordinate SatAntennaGainPattern::GetValidRandomPosition (GeoCoordinate satellite) const
+{
+  GeoCoordinate position = this->GetValidRandomPosition ();
+  if (!m_satellitePositionInitialized)
+    {
+      // TODO: Add warning
+      return position;
+    }
+
+  double latOffset = satellite.GetLatitude () - m_initialSatellitePosition.GetLatitude ();
+  double lonOffset = satellite.GetLongitude () - m_initialSatellitePosition.GetLongitude ();
+  return GeoCoordinate (position.GetLatitude () + latOffset, position.GetLongitude () + lonOffset, position.GetAltitude ());
+}
+
+
 GeoCoordinate SatAntennaGainPattern::GetValidRandomPosition () const
 {
   NS_LOG_FUNCTION (this);
@@ -272,6 +287,21 @@ GeoCoordinate SatAntennaGainPattern::GetValidRandomPosition () const
 }
 
 
+bool SatAntennaGainPattern::IsValidPosition (GeoCoordinate coord, GeoCoordinate satellite, TracedCallback<double> cb) const
+{
+  if (!m_satellitePositionInitialized)
+    {
+      // TODO: Add warning
+      return this->IsValidPosition (coord, cb);
+    }
+
+  double latOffset = satellite.GetLatitude () - m_initialSatellitePosition.GetLatitude ();
+  double lonOffset = satellite.GetLongitude () - m_initialSatellitePosition.GetLongitude ();
+  GeoCoordinate position {coord.GetLatitude () - latOffset, coord.GetLongitude () - lonOffset, coord.GetAltitude ()};
+  return this->IsValidPosition (position, cb);
+}
+
+
 bool SatAntennaGainPattern::IsValidPosition (GeoCoordinate coord, TracedCallback<double> cb) const
 {
   NS_LOG_FUNCTION (this << coord.GetLatitude () << coord.GetLongitude ());
@@ -279,6 +309,21 @@ bool SatAntennaGainPattern::IsValidPosition (GeoCoordinate coord, TracedCallback
   double antennaGain = SatUtils::LinearToDb (GetAntennaGain_lin (coord));
   cb (antennaGain);
   return antennaGain >= m_minAcceptableAntennaGainInDb;
+}
+
+
+double SatAntennaGainPattern::GetAntennaGain_lin (GeoCoordinate coord, GeoCoordinate satellite) const
+{
+  if (!m_satellitePositionInitialized)
+    {
+      // TODO: Add warning
+      return this->GetAntennaGain_lin (coord);
+    }
+
+  double latOffset = satellite.GetLatitude () - m_initialSatellitePosition.GetLatitude ();
+  double lonOffset = satellite.GetLongitude () - m_initialSatellitePosition.GetLongitude ();
+  GeoCoordinate position {coord.GetLatitude () - latOffset, coord.GetLongitude () - lonOffset, coord.GetAltitude ()};
+  return this->GetAntennaGain_lin (position);
 }
 
 
@@ -361,6 +406,12 @@ double SatAntennaGainPattern::GetAntennaGain_lin (GeoCoordinate coord) const
   return gain;
 }
 
+
+void SatAntennaGainPattern::SetInitialSatellitePosition (GeoCoordinate coord)
+{
+  m_initialSatellitePosition = coord;
+  m_satellitePositionInitialized = true;
+}
 
 
 } // namespace ns3
