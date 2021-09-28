@@ -222,9 +222,10 @@ SatAntennaGainPatternContainer::ConfigureBeamsMobility (Ptr<SatMobilityModel> mo
       NS_ABORT_MSG_UNLESS (originDateFile.is_open (), "SatAntennaGainPatternContainer::ConfigureBeamsMobility - origin.timestamp unreadable; are these beams meant to be mobile?");
 
       std::string originDate;
-      originDateFile >> originDate;
+      std::getline (originDateFile, originDate);
 
       Ptr<SatSGP4MobilityModel> model = CopyObject<SatSGP4MobilityModel> (sgp4Mobility);
+      NS_LOG_DEBUG (this << " Setting date to " << originDate);
       model->SetStartTime (JulianDate (originDate)); 
       initial = model->GetGeoPosition ();
     }
