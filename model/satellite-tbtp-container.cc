@@ -19,7 +19,6 @@
  */
 
 #include <algorithm>
-#include <iostream>
 #include "ns3/mac48-address.h"
 #include "ns3/uinteger.h"
 #include "ns3/nstime.h"

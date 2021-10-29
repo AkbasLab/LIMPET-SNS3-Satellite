@@ -203,10 +203,10 @@ SatMobilityObserver::GetTimingAdvance (void)
   NS_LOG_FUNCTION (this);
 
   // update timing advance, if another end is given and update needed
-  if ( (m_anotherMobility != NULL) &&  ( m_updateTimingAdvance == true ) )
+  if (m_anotherMobility && m_updateTimingAdvance)
     {
       // another propagation delay is expected to be given
-      NS_ASSERT ( m_anotherProgDelayModel != NULL );
+      NS_ASSERT (m_anotherProgDelayModel != NULL);
 
       // same reference ellipsoide must be used by mobilities
       NS_ASSERT (m_geoSatMobility->GetGeoPosition ().GetRefEllipsoid () == m_ownMobility->GetGeoPosition ().GetRefEllipsoid () );
@@ -252,7 +252,6 @@ SatMobilityObserver::PositionChanged (std::string context, Ptr<const SatMobility
     }
 
   NotifyPropertyChange ();
-
 }
 
 void
@@ -308,8 +307,7 @@ SatMobilityObserver::UpdateTimingAdvance ()
   NS_ASSERT (m_anotherProgDelayModel != NULL);
 
   m_timingAdvance_s = m_ownProgDelayModel->GetDelay ( m_ownMobility, m_geoSatMobility ) +
-    m_anotherProgDelayModel->GetDelay ( m_anotherMobility, m_geoSatMobility );
-
+  m_anotherProgDelayModel->GetDelay ( m_anotherMobility, m_geoSatMobility );
 }
 
 

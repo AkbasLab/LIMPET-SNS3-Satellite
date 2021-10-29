@@ -172,7 +172,8 @@ SatSGP4MobilityModel::DoGetGeoPosition () const
     return Vector3D ();
 
   // vector r is in km so it needs to be converted to meters
-  m_lastPosition = rTemeTorItrf (Vector3D (r[0], r[1], r[2]), cur)*1000;
+  m_lastPosition = rTemeTorItrf (Vector3D (r[0], r[1], r[2]), cur) * 1000;
+  NotifyGeoCourseChange ();
 
   return m_lastPosition;
 }

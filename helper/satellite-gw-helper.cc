@@ -20,33 +20,35 @@
  * Author: Mathias Ettinger <mettinger@viveris.toulouse.fr>
  */
 
-#include "ns3/log.h"
-#include "ns3/names.h"
-#include "ns3/enum.h"
-#include "ns3/double.h"
-#include "ns3/pointer.h"
-#include "ns3/uinteger.h"
-#include "ns3/config.h"
-#include "../model/satellite-const-variables.h"
-#include "../model/satellite-utils.h"
-#include "../model/satellite-channel.h"
-#include "../model/satellite-gw-llc.h"
-#include "../model/satellite-gw-mac.h"
-#include "../model/satellite-net-device.h"
-#include "../model/satellite-geo-net-device.h"
-#include "../model/satellite-gw-phy.h"
-#include "../model/satellite-phy-tx.h"
-#include "../model/satellite-phy-rx.h"
-#include "../model/satellite-phy-rx-carrier-conf.h"
-#include "../model/satellite-link-results.h"
-#include "../model/satellite-node-info.h"
-#include "../model/satellite-enums.h"
-#include "../model/satellite-channel-estimation-error-container.h"
-#include "../model/satellite-packet-classifier.h"
-#include "../model/satellite-lower-layer-service.h"
-#include "ns3/satellite-gw-helper.h"
-#include "ns3/singleton.h"
-#include "ns3/satellite-id-mapper.h"
+#include <ns3/log.h>
+#include <ns3/names.h>
+#include <ns3/enum.h>
+#include <ns3/double.h>
+#include <ns3/pointer.h>
+#include <ns3/uinteger.h>
+#include <ns3/config.h>
+#include <ns3/singleton.h>
+
+#include <ns3/satellite-const-variables.h>
+#include <ns3/satellite-utils.h>
+#include <ns3/satellite-channel.h>
+#include <ns3/satellite-gw-llc.h>
+#include <ns3/satellite-gw-mac.h>
+#include <ns3/satellite-net-device.h>
+#include <ns3/satellite-geo-net-device.h>
+#include <ns3/satellite-gw-phy.h>
+#include <ns3/satellite-phy-tx.h>
+#include <ns3/satellite-phy-rx.h>
+#include <ns3/satellite-phy-rx-carrier-conf.h>
+#include <ns3/satellite-link-results.h>
+#include <ns3/satellite-node-info.h>
+#include <ns3/satellite-enums.h>
+#include <ns3/satellite-channel-estimation-error-container.h>
+#include <ns3/satellite-packet-classifier.h>
+#include <ns3/satellite-lower-layer-service.h>
+#include <ns3/satellite-gw-helper.h>
+#include <ns3/satellite-id-mapper.h>
+#include <ns3/satellite-ut-handover-module.h>
 #include <ns3/satellite-fwd-link-scheduler.h>
 #include <ns3/satellite-fwd-link-scheduler-default.h>
 #include <ns3/satellite-fwd-link-scheduler-time-slicing.h>
@@ -413,6 +415,14 @@ SatGwHelper::Install (Ptr<Node> n, uint32_t gwId, uint32_t beamId, Ptr<SatChanne
   mac->SetAttribute ("Scheduler", PointerValue (fwdLinkScheduler));
 
   mac->StartPeriodicTransmissions ();
+
+  Ptr<SatUtHandoverModule> utHandoverModule = n->GetObject<SatUtHandoverModule> ();
+  if (utHandoverModule != nullptr)
+    {
+      utHandoverModule->SetHandoverRequestCallback (MakeCallback (&SatPhy::SetBeamId, phy));
+      mac->SetBeamCheckerCallback (MakeCallback (&SatUtHandoverModule::CheckForHandoverRecommendation, utHandoverModule));
+      mac->SetAskedBeamCallback (MakeCallback (&SatUtHandoverModule::GetAskedBeamId, utHandoverModule));
+    }
 
   return dev;
 }

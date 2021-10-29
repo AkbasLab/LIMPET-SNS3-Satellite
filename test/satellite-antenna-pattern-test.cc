@@ -99,22 +99,12 @@ SatAntennaPatternTestCase::DoRun (void)
   for ( uint32_t i = 0; i < coordinates.size (); ++i)
     {
       bestBeamId = gpContainer.GetBestBeamId (coordinates[i]);
+      NS_TEST_ASSERT_MSG_EQ ( bestBeamId, expectedBeamIds[i], "Not expected best spot-beam id");
 
       Ptr<SatAntennaGainPattern> gainPattern = gpContainer.GetAntennaGainPattern (bestBeamId);
-
       gain = gainPattern->GetAntennaGain_lin (coordinates[i]);
       double gain_dB = 10.0 * log10 (gain);
-
-      /*
-      std::cout << "GW: " << i+1 <<
-          ", Lat: " << coordinates[i].GetLatitude () <<
-          ", Lon: " << coordinates[i].GetLongitude () <<
-          ", bestBeamId: " << bestBeamId <<
-          ", gain: " << gain_dB << std::endl;
-      */
-
       NS_TEST_ASSERT_MSG_EQ_TOL ( gain_dB, expectedGains[i], 0.001, "Expected gain not within tolerance");
-      NS_TEST_ASSERT_MSG_EQ ( bestBeamId, expectedBeamIds[i], "Not expected best spot-beam id");
     }
 
   Singleton<SatEnvVariables>::Get ()->DoDispose ();

@@ -320,7 +320,8 @@ double SatAntennaGainPattern::GetAntennaGain_lin (GeoCoordinate coord) const
       || m_minLon > longitude
       || longitude > m_maxLon)
     {
-      NS_FATAL_ERROR ("Given latitude and longitude out of range!");
+      // NS_FATAL_ERROR ("Given latitude and longitude out of range!");
+      return NAN;
     }
 
   // Calculate the minimum grid point {minLatIndex, minLonIndex} for the given {latitude, longitude} point
@@ -335,7 +336,8 @@ double SatAntennaGainPattern::GetAntennaGain_lin (GeoCoordinate coord) const
       || std::isnan (m_antennaPattern[minLatIndex + 1][minLonIndex])
       || std::isnan (m_antennaPattern[minLatIndex + 1][minLonIndex + 1]))
     {
-      NS_FATAL_ERROR (this << ", some value(s) of the interpolated grid point(s) is/are NAN!");
+      // NS_FATAL_ERROR (this << ", some value(s) of the interpolated grid point(s) is/are NAN!");
+      return NAN;
     }
 
   /**

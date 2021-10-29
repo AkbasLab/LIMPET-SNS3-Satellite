@@ -126,8 +126,6 @@ SatUtMac::SatUtMac ()
   m_handoverCallback (0),
   m_gatewayUpdateCallback (0),
   m_routingUpdateCallback (0),
-  m_beamCheckerCallback (0),
-  m_askedBeamCallback (0),
   m_txCheckCallback (0),
   m_sliceSubscriptionCallback (0),
   m_sendLogonCallback (0),
@@ -166,8 +164,6 @@ SatUtMac::SatUtMac (Ptr<SatSuperframeSeq> seq, uint32_t beamId, bool crdsaOnlyFo
   m_handoverCallback (0),
   m_gatewayUpdateCallback (0),
   m_routingUpdateCallback (0),
-  m_beamCheckerCallback (0),
-  m_askedBeamCallback (0),
   m_txCheckCallback (0),
   m_sliceSubscriptionCallback (0),
   m_sendLogonCallback (0),
@@ -198,8 +194,6 @@ SatUtMac::DoDispose (void)
   m_handoverCallback.Nullify ();
   m_gatewayUpdateCallback.Nullify ();
   m_routingUpdateCallback.Nullify ();
-  m_beamCheckerCallback.Nullify ();
-  m_askedBeamCallback.Nullify ();
   m_txCheckCallback.Nullify ();
   m_sliceSubscriptionCallback.Nullify ();
   m_sendLogonCallback.Nullify ();
@@ -231,20 +225,6 @@ SatUtMac::SetRoutingUpdateCallback (SatUtMac::RoutingUpdateCallback cb)
 {
   NS_LOG_FUNCTION (this << &cb);
   m_routingUpdateCallback = cb;
-}
-
-void
-SatUtMac::SetBeamCheckerCallback (SatUtMac::BeamCheckerCallback cb)
-{
-  NS_LOG_FUNCTION (this << &cb);
-  m_beamCheckerCallback = cb;
-}
-
-void
-SatUtMac::SetAskedBeamCallback (SatUtMac::AskedBeamCallback cb)
-{
-  NS_LOG_FUNCTION (this << &cb);
-  m_askedBeamCallback = cb;
 }
 
 void
@@ -1641,7 +1621,7 @@ SatUtMac::DoFrameStart ()
                 {
                   ++m_handoverMessagesCount;
                 }
-              if (m_useLogon && m_handoverMessagesCount > m_maxHandoverMessagesSent)
+              if (m_handoverMessagesCount > m_maxHandoverMessagesSent)
                 {
                   m_handoverMessagesCount = 0;
                   LogOff ();

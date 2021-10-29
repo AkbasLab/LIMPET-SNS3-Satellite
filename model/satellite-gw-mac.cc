@@ -195,6 +195,11 @@ SatGwMac::StartTransmission (uint32_t carrierId)
 
   Time txDuration;
 
+  if (!m_beamCheckerCallback.IsNull () && m_beamCheckerCallback (m_beamId))
+    {
+      m_beamId = m_askedBeamCallback ();
+    }
+
   if (m_txEnabled)
     {
       std::pair<Ptr<SatBbFrame>, const Time> bbFrameInfo = m_fwdScheduler->GetNextFrame ();
@@ -248,7 +253,7 @@ SatGwMac::StartTransmission (uint32_t carrierId)
    * modify the FWD link scheduler to schedule separately each FWD link
    * carrier.
    */
-  Simulator::Schedule (txDuration, &SatGwMac::StartTransmission, this, 0);
+  Simulator::Schedule (txDuration, &SatGwMac::StartTransmission, this, carrierId);
 }
 
 void

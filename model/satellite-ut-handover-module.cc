@@ -131,7 +131,7 @@ SatUtHandoverModule::CheckForHandoverRecommendation (uint32_t beamId)
   Ptr<SatMobilityModel> mobilityModel = GetObject<SatMobilityModel> ();
   if (!mobilityModel)
     {
-      NS_LOG_FUNCTION ("Bailing out for lack of mobility model");
+      NS_LOG_INFO ("Bailing out for lack of mobility model");
       return false;
     }
 
@@ -139,7 +139,7 @@ SatUtHandoverModule::CheckForHandoverRecommendation (uint32_t beamId)
   GeoCoordinate coords = mobilityModel->GetGeoPosition ();
   if (m_antennaGainPatterns->GetAntennaGainPattern (beamId)->IsValidPosition (coords, m_antennaGainTrace))
     {
-      NS_LOG_FUNCTION ("Current beam is good, do nothing");
+      NS_LOG_INFO ("Current beam is good, do nothing");
       m_hasPendingRequest = false;
       return false;
     }
@@ -151,10 +151,18 @@ SatUtHandoverModule::CheckForHandoverRecommendation (uint32_t beamId)
       bestBeamId = m_antennaGainPatterns->GetBestBeamId (coords);
     }
 
+  if (!bestBeamId)
+    {
+      // We somehow ended outside of the area covered by satellite beams
+      // Can't do anything more, abort
+      m_askedBeamId = beamId;  // TODO: check what it implies, do we need that?
+      return false;
+    }
+
   Time now = Simulator::Now ();
   if (bestBeamId != beamId && (!m_hasPendingRequest || now - m_lastMessageSentAt > m_repeatRequestTimeout))
     {
-      NS_LOG_FUNCTION ("Sending handover recommendation for beam " << bestBeamId);
+      NS_LOG_INFO ("Sending handover recommendation for beam " << bestBeamId);
       m_handoverCallback (bestBeamId);
       m_lastMessageSentAt = now;
       m_hasPendingRequest = true;

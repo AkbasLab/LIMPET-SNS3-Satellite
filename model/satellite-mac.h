@@ -156,6 +156,31 @@ public:
   void SetSendCtrlCallback (SatMac::SendCtrlMsgCallback cb);
 
   /**
+   * \brief Callback to check whether the current beam is still the best one
+   * to use for sending data; and sending handover recommendation if not
+   * \param uint32_t the current beam ID
+   */
+  typedef Callback<bool, uint32_t> BeamCheckerCallback;
+
+  /**
+   * \brief Callback to ask for the best beam ID during handover
+   * \return The best beam ID
+   */
+  typedef Callback<uint32_t> AskedBeamCallback;
+
+  /**
+   * \brief Method to set the beam checker callback
+   * \param cb callback to invoke to check beams and recommend handover
+   */
+  void SetBeamCheckerCallback (SatMac::BeamCheckerCallback cb);
+
+  /**
+   * \brief Method to get the best beam when performing handover
+   * \param cb callback to invoke to ask best beam ID
+   */
+  void SetAskedBeamCallback (SatMac::AskedBeamCallback cb);
+
+  /**
    * \brief Set the node info
    * \param nodeInfo containing node specific information
    */
@@ -306,6 +331,16 @@ protected:
    * is only supported currently, thus, it is set to true by default.
    */
   bool m_txEnabled;
+
+  /**
+   * Beam checker and handover recommendation sending callback
+   */
+  SatMac::BeamCheckerCallback m_beamCheckerCallback;
+
+  /**
+   * Beam checker and handover recommendation sending callback
+   */
+  SatMac::AskedBeamCallback m_askedBeamCallback;
 
   /**
    * Time of the last beam enable event.

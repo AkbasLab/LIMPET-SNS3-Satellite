@@ -667,6 +667,10 @@ SatHelper::LoadMobileUTsFromFolder (const std::string& folderName, Ptr<RandomVar
 
       Ptr<Node> utNode = LoadMobileUtFromFile (filepath);
       uint32_t bestBeamId = utNode->GetObject<SatTracedMobilityModel> ()->GetBestBeamId ();
+      if (!bestBeamId)
+        {
+          NS_FATAL_ERROR ("SatHelper::LoadMobileUTsFromFolder Node position out of range for satellite coverage. File: " << filepath);
+        }
 
       // Store Node in the container for the starting beam
       std::map<uint32_t, NodeContainer>::iterator it = m_mobileUtsByBeam.find (bestBeamId);
@@ -696,9 +700,11 @@ SatHelper::LoadMobileUtFromFile (const std::string& filename)
 {
   // Create Node, Mobility and aggregate them
   Ptr<SatTracedMobilityModel> mobility = CreateObject<SatTracedMobilityModel> (filename, m_antennaGainPatterns);
+  Ptr<SatUtHandoverModule> ho = CreateObject<SatUtHandoverModule> (m_antennaGainPatterns);
   Ptr<Node> utNode = CreateObject<Node> ();
   utNode->AggregateObject (mobility);
-  utNode->AggregateObject (CreateObject<SatUtHandoverModule> (m_antennaGainPatterns));
+  NS_LOG_DEBUG ("Created Handover Module " << ho << " for Mobile UT node " << utNode);
+  utNode->AggregateObject (ho);
   return utNode;
 }
 
@@ -722,6 +728,13 @@ SatHelper::SetGwMobility (NodeContainer gwNodes)
   mobility.Install (gwNodes);
 
   InstallMobilityObserver (gwNodes);
+  for (uint32_t i = 0; i < gwNodes.GetN (); ++i)
+    {
+      Ptr<SatUtHandoverModule> ho = CreateObject<SatUtHandoverModule> (m_antennaGainPatterns);
+      Ptr<Node> gwNode = gwNodes.Get (i);
+      NS_LOG_DEBUG ("Created Handover Module " << ho << " for GW node " << gwNode);
+      gwNode->AggregateObject (ho);
+    }
 }
 
 void
@@ -751,17 +764,21 @@ SatHelper::SetUtMobility (NodeContainer uts, uint32_t beamId)
 
   mobility.SetPositionAllocator (allocator);
   mobility.SetMobilityModel ("ns3::SatConstantPositionMobilityModel");
-  Ptr<MobilityModel> model = uts.Get (0)->GetObject<MobilityModel> ();
+  // Ptr<MobilityModel> model = uts.Get (0)->GetObject<MobilityModel> ();
   mobility.Install (uts);
 
   InstallMobilityObserver (uts);
 
   for (uint32_t i = 0; i < uts.GetN (); ++i)
     {
-      GeoCoordinate position = uts.Get (i)->GetObject<SatMobilityModel> ()->GetGeoPosition ();
+      Ptr<Node> utNode = uts.Get (i);
+      GeoCoordinate position = utNode->GetObject<SatMobilityModel> ()->GetGeoPosition ();
       NS_LOG_INFO ("Installing mobility observer on Ut Node at " <<
                    position << " with antenna gain of " <<
                    m_antennaGainPatterns->GetAntennaGainPattern (beamId)->GetAntennaGain_lin (position));
+      Ptr<SatUtHandoverModule> ho = CreateObject<SatUtHandoverModule> (m_antennaGainPatterns);
+      NS_LOG_DEBUG ("Created Handover Module " << ho << " for Mobile UT node " << utNode);
+      utNode->AggregateObject (ho);
     }
 }
 

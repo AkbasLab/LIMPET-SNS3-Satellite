@@ -78,6 +78,8 @@ SatMac::SatMac ()
   m_nodeInfo (),
   m_beamId (0),
   m_txEnabled (true),
+  m_beamCheckerCallback (0),
+  m_askedBeamCallback (0),
   m_beamEnabledTime (Seconds (0)),
   m_lastDelay (0)
 {
@@ -90,6 +92,8 @@ SatMac::SatMac (uint32_t beamId)
   m_nodeInfo (),
   m_beamId (beamId),
   m_txEnabled (true),
+  m_beamCheckerCallback (0),
+  m_askedBeamCallback (0),
   m_beamEnabledTime (Seconds (0)),
   m_lastDelay (0)
 {
@@ -112,6 +116,8 @@ SatMac::DoDispose ()
   m_readCtrlCallback.Nullify ();
   m_reserveCtrlCallback.Nullify ();
   m_sendCtrlCallback.Nullify ();
+  m_beamCheckerCallback.Nullify ();
+  m_askedBeamCallback.Nullify ();
 
   Object::DoDispose ();
 }
@@ -331,6 +337,20 @@ SatMac::SetSendCtrlCallback (SatMac::SendCtrlMsgCallback cb)
 {
   NS_LOG_FUNCTION (this << &cb);
   m_sendCtrlCallback = cb;
+}
+
+void
+SatMac::SetBeamCheckerCallback (SatMac::BeamCheckerCallback cb)
+{
+  NS_LOG_FUNCTION (this << &cb);
+  m_beamCheckerCallback = cb;
+}
+
+void
+SatMac::SetAskedBeamCallback (SatMac::AskedBeamCallback cb)
+{
+  NS_LOG_FUNCTION (this << &cb);
+  m_askedBeamCallback = cb;
 }
 
 

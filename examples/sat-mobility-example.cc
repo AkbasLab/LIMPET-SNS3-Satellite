@@ -42,6 +42,7 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("sat-mobility-example");
 
+
 int
 main (int argc, char *argv[])
 {
@@ -87,15 +88,21 @@ main (int argc, char *argv[])
   Config::SetDefault ("ns3::SatSGP4MobilityModel::StartDateStr", StringValue (startDate));
   Config::SetDefault ("ns3::SatSGP4MobilityModel::UpdatePositionEachRequest", BooleanValue (updatePositionEachRequest));
   Config::SetDefault ("ns3::SatSGP4MobilityModel::UpdatePositionPeriod", TimeValue (updatePositionPeriod));
+  Config::SetDefault ("ns3::SatUtMac::MaxHandoverMessages", UintegerValue (3));
 
   simulationHelper->SetSimulationTime (simLength);
   simulationHelper->SetUserCountPerUt (endUsersPerUt);
-  simulationHelper->SetUtCountPerBeam (utsPerBeam);
+  simulationHelper->SetUtCountPerBeam (0);
+  simulationHelper->SetUtCountPerBeam (beamId, utsPerBeam);
 
   // Set beam ID
   std::stringstream beamsEnabled;
-  beamsEnabled << beamId;
-  simulationHelper->SetBeams (beamsEnabled.str ());
+  for (uint32_t beamId = 1; beamId < 73; ++beamId)
+    {
+      beamsEnabled << beamId << ' ';
+    }
+  // simulationHelper->SetBeams (beamsEnabled.str ());
+  simulationHelper->SetBeams ("1 10 22 21 51 33 32");
 
   // Create reference system
   simulationHelper->CreateSatScenario ();

@@ -1277,6 +1277,7 @@ SimulationHelper::CreateSatScenario (SatHelper::PreDefinedScenario_t scenario, c
         }
 
       std::map<uint32_t, std::vector<std::pair<GeoCoordinate, uint32_t>>> additionalNodes = GetGroupHelper ()->GetAdditionalNodesPerBeam ();
+      NS_LOG_INFO ("Adding additional nodes in " << additionalNodes.size () << " beams");
       for (std::map<uint32_t, std::vector<std::pair<GeoCoordinate, uint32_t>>>::iterator it = additionalNodes.begin(); it != additionalNodes.end(); it++)
         {
           if (!IsBeamEnabled (it->first))
