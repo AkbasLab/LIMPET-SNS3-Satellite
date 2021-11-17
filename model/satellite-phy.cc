@@ -355,13 +355,19 @@ SatPhy::SendPduWithParams (Ptr<SatSignalParameters> txParams )
    */
 }
 
-void
+bool
 SatPhy::SetBeamId (uint32_t beamId)
 {
   NS_LOG_FUNCTION (this << beamId);
+
+  bool connect = m_beamId == 0 && beamId != 0;
+  bool disconnect = m_beamId != 0 && beamId == 0;
+
   m_beamId = beamId;
   m_phyTx->SetBeamId (beamId);
   m_phyRx->SetBeamId (beamId);
+
+  return connect || disconnect;
 }
 
 void

@@ -104,6 +104,7 @@ public:
    * \param seq                   Pointer to used superframe sequence configuration (containing superframe configurations).
    */
   SatBeamHelper (Ptr<Node> geoNode,
+                 bool useGeoSatellite,
                  SatTypedefs::CarrierBandwidthConverter_t bandwidthConverterCb,
                  uint32_t fwdLinkCarrierCount,
                  uint32_t rtnLinkCarrierCount,
@@ -249,7 +250,7 @@ public:
    *
    * \return pointer to Geo Satellite node.
    */
-  Ptr<Node> GetGeoSatNode () const;
+  Ptr<Node> GetSatelliteNode () const;
 
   /**
    * \return pointer to UT helper.
@@ -310,6 +311,8 @@ public:
 
   SatEnums::PropagationDelayModel_t GetPropagationDelayModelEnum ();
 
+  void ConnectGws ();
+
 private:
   CarrierFreqConverter m_carrierFreqConverter;
   SatTypedefs::CarrierBandwidthConverter_t m_carrierBandwidthConverter;
@@ -317,10 +320,10 @@ private:
   Ptr<SatSuperframeSeq> m_superframeSeq;
 
   ObjectFactory         m_channelFactory;
-  Ptr<SatGeoHelper>     m_geoHelper;
+  Ptr<SatGeoHelper>     m_satHelper;
   Ptr<SatGwHelper>      m_gwHelper;
   Ptr<SatUtHelper>      m_utHelper;
-  Ptr<Node>             m_geoNode;
+  Ptr<Node>             m_satelliteNode;
   Ptr<SatNcc>           m_ncc;
 
   Ptr<SatAntennaGainPatternContainer>   m_antennaGainPatterns;

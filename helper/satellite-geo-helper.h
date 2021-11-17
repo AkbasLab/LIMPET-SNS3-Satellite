@@ -80,9 +80,7 @@ public:
                 Ptr<SatSuperframeSeq> seq,
                 RandomAccessSettings_s randomAccessSettings);
 
-  virtual ~SatGeoHelper ()
-  {
-  }
+  virtual ~SatGeoHelper () {}
 
   /**
    * Set an attribute value to be propagated to each NetDevice created by the
@@ -136,7 +134,7 @@ public:
    *
    * \return pointer to the created device
    */
-  Ptr<NetDevice> Install (Ptr<Node> n);
+  virtual Ptr<NetDevice> Install (Ptr<Node> n);
 
   /**
    * \param aName name of a node
@@ -158,14 +156,14 @@ public:
    * \param feederAgp feeder beam antenna gain pattern
    * \param beamId Id of the beam
    */
-  void AttachChannels ( Ptr<NetDevice> dev,
-                        Ptr<SatChannel> ff,
-                        Ptr<SatChannel> fr,
-                        Ptr<SatChannel> uf,
-                        Ptr<SatChannel> ur,
-                        Ptr<SatAntennaGainPattern> userAgp,
-                        Ptr<SatAntennaGainPattern> feederAgp,
-                        uint32_t userBeamId);
+  virtual void AttachChannels ( Ptr<NetDevice> dev,
+                                Ptr<SatChannel> ff,
+                                Ptr<SatChannel> fr,
+                                Ptr<SatChannel> uf,
+                                Ptr<SatChannel> ur,
+                                Ptr<SatAntennaGainPattern> userAgp,
+                                Ptr<SatAntennaGainPattern> feederAgp,
+                                uint32_t userBeamId);
 
   /**
    * Enables creation traces to be written in given file
@@ -175,7 +173,7 @@ public:
   void EnableCreationTraces (Ptr<OutputStreamWrapper> stream, CallbackBase &cb);
 
 
-private:
+protected:
   /**
    * GEO satellite node id
    */

@@ -358,6 +358,9 @@ SatGwHelper::Install (Ptr<Node> n, uint32_t gwId, uint32_t beamId, Ptr<SatChanne
   // Attach the logon receive callback to SatNcc
   mac->SetLogonCallback (MakeBoundCallback (&logonCallbackHelper, ncc, llsConf));
 
+  // Attach the beam handover callback to SatPhy
+  mac->SetBeamCallback (MakeCallback (&SatPhy::SetBeamId, phy));
+
   // Set the device address and pass it to MAC as well
   Mac48Address addr = Mac48Address::Allocate ();
   dev->SetAddress (addr);
@@ -419,7 +422,7 @@ SatGwHelper::Install (Ptr<Node> n, uint32_t gwId, uint32_t beamId, Ptr<SatChanne
   Ptr<SatUtHandoverModule> utHandoverModule = n->GetObject<SatUtHandoverModule> ();
   if (utHandoverModule != nullptr)
     {
-      utHandoverModule->SetHandoverRequestCallback (MakeCallback (&SatPhy::SetBeamId, phy));
+      utHandoverModule->SetHandoverRequestCallback (MakeCallback (&SatGwMac::ChangeBeam, mac));
       mac->SetBeamCheckerCallback (MakeCallback (&SatUtHandoverModule::CheckForHandoverRecommendation, utHandoverModule));
       mac->SetAskedBeamCallback (MakeCallback (&SatUtHandoverModule::GetAskedBeamId, utHandoverModule));
     }

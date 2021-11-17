@@ -71,7 +71,8 @@ SatGwMac::GetTypeId (void)
 SatGwMac::SatGwMac ()
   : SatMac (),
   m_fwdScheduler (),
-  m_guardTime (MicroSeconds (1))
+  m_guardTime (MicroSeconds (1)),
+  m_isActive (false)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -79,7 +80,8 @@ SatGwMac::SatGwMac ()
 SatGwMac::SatGwMac (uint32_t beamId)
   : SatMac (beamId),
   m_fwdScheduler (),
-  m_guardTime (MicroSeconds (1))
+  m_guardTime (MicroSeconds (1)),
+  m_isActive (false)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -98,6 +100,8 @@ SatGwMac::DoDispose ()
   m_crReceiveCallback.Nullify ();
   m_handoverCallback.Nullify ();
   m_logonCallback.Nullify ();
+  m_beamCallback.Nullify ();
+  m_connectionCallback.Nullify ();
 
   SatMac::DoDispose ();
 }
@@ -415,6 +419,24 @@ SatGwMac::SendLogonResponseHelper (SatGwMac* self, Address utId, uint32_t raChan
 }
 
 void
+SatGwMac::SetHandleAnyBeam (bool active)
+{
+  NS_LOG_FUNCTION (this << active);
+  m_isActive = active;
+}
+
+void
+SatGwMac::ChangeBeam (uint32_t beamId)
+{
+  NS_LOG_FUNCTION (this << beamId);
+
+  if (m_beamCallback (beamId))
+    {
+      m_connectionCallback ();
+    }
+}
+
+void
 SatGwMac::SetCrReceiveCallback (SatGwMac::CrReceiveCallback cb)
 {
   NS_LOG_FUNCTION (this << &cb);
@@ -433,6 +455,20 @@ SatGwMac::SetLogonCallback (SatGwMac::LogonCallback cb)
 {
   NS_LOG_FUNCTION (this << &cb);
   m_logonCallback = cb;
+}
+
+void
+SatGwMac::SetBeamCallback (SatGwMac::PhyBeamCallback cb)
+{
+  NS_LOG_FUNCTION (this << &cb);
+  m_beamCallback = cb;
+}
+
+void
+SatGwMac::SetConnectionCallback (SatGwMac::ConnectionCallback cb)
+{
+  NS_LOG_FUNCTION (this << &cb);
+  m_connectionCallback = cb;
 }
 
 } // namespace ns3

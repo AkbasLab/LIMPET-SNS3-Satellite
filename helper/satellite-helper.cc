@@ -219,18 +219,18 @@ SatHelper::SatHelper ()
                          m_satMobilitySGP4TleFileName);
 
   // create Geo Satellite node, set mobility to it
-  Ptr<Node> geoSatNode = CreateObject<Node> ();
+  Ptr<Node> satelliteNode = CreateObject<Node> ();
 
-  if (m_satMobilitySGP4Enabled == true)
+  if (m_satMobilitySGP4Enabled)
     {
-      SetSatMobility (geoSatNode);
+      SetLeoSatMobility (satelliteNode);
     }
   else
     {
-      SetGeoSatMobility (geoSatNode);
+      SetGeoSatMobility (satelliteNode);
     }
 
-  m_beamHelper = CreateObject<SatBeamHelper> (geoSatNode,
+  m_beamHelper = CreateObject<SatBeamHelper> (satelliteNode, m_satMobilitySGP4Enabled,
                                               MakeCallback (&SatConf::GetCarrierBandwidthHz, m_satConf),
                                               m_satConf->GetRtnLinkCarrierCount (),
                                               m_satConf->GetFwdLinkCarrierCount (),
@@ -239,10 +239,10 @@ SatHelper::SatHelper ()
   m_antennaGainPatterns = CreateObject<SatAntennaGainPatternContainer> ();
   m_beamHelper->SetAntennaGainPatterns (m_antennaGainPatterns);
 
-  Ptr<SatMobilityModel> mobility = geoSatNode->GetObject<SatMobilityModel> ();
+  Ptr<SatMobilityModel> mobility = satelliteNode->GetObject<SatMobilityModel> ();
   m_antennaGainPatterns->ConfigureBeamsMobility (mobility);
 
-  if (m_satMobilitySGP4Enabled == true && m_beamHelper->GetPropagationDelayModelEnum () != SatEnums::PD_CONSTANT_SPEED)
+  if (m_satMobilitySGP4Enabled && m_beamHelper->GetPropagationDelayModelEnum () != SatEnums::PD_CONSTANT_SPEED)
     {
       NS_FATAL_ERROR ("Must use constant speed propagation delay model if satellite mobility is enabled");
     }
@@ -620,14 +620,27 @@ SatHelper::DoCreateScenario (BeamUserInfoMap_t& beamInfos, uint32_t gwUsers)
 
           // gw index starts from 1 and we have stored them starting from 0
           Ptr<Node> gwNode = gwNodes.Get (rtnConf[SatConf::GW_ID_INDEX] - 1);
+          uint32_t rtnUlFreqId = 1;
+          uint32_t rtnFlFreqId = 1;
+          uint32_t fwdUlFreqId = 1;
+          uint32_t fwdFlFreqId = 1;
+          if (!m_satMobilitySGP4Enabled)
+            {
+              // Force 1 channel for LEO but keep those configured for GEO
+              rtnUlFreqId = rtnConf[SatConf::U_FREQ_ID_INDEX];
+              rtnFlFreqId = rtnConf[SatConf::F_FREQ_ID_INDEX];
+              fwdUlFreqId = fwdConf[SatConf::U_FREQ_ID_INDEX];
+              fwdFlFreqId = fwdConf[SatConf::F_FREQ_ID_INDEX];
+            }
+
           std::pair<Ptr<NetDevice>, NetDeviceContainer> netDevices = m_beamHelper->Install (
               uts, gwNode,
               rtnConf[SatConf::GW_ID_INDEX],
               rtnConf[SatConf::BEAM_ID_INDEX],
-              rtnConf[SatConf::U_FREQ_ID_INDEX],
-              rtnConf[SatConf::F_FREQ_ID_INDEX],
-              fwdConf[SatConf::U_FREQ_ID_INDEX],
-              fwdConf[SatConf::F_FREQ_ID_INDEX],
+              rtnUlFreqId,
+              rtnFlFreqId,
+              fwdUlFreqId,
+              fwdFlFreqId,
               MakeCallback (&SatUserHelper::UpdateUtRoutes, m_userHelper));
           m_userHelper->PopulateBeamRoutings (uts, netDevices.second, gwNode, netDevices.first);
         }
@@ -635,6 +648,7 @@ SatHelper::DoCreateScenario (BeamUserInfoMap_t& beamInfos, uint32_t gwUsers)
       m_mobileUtsByBeam.clear ();  // Release unused resources (mobile UTs starting in non-existent beams)
 
       m_userHelper->InstallGw (m_beamHelper->GetGwNodes (), gwUsers);
+      m_beamHelper->ConnectGws ();
 
       if (m_packetTraces)
         {
@@ -728,12 +742,15 @@ SatHelper::SetGwMobility (NodeContainer gwNodes)
   mobility.Install (gwNodes);
 
   InstallMobilityObserver (gwNodes);
-  for (uint32_t i = 0; i < gwNodes.GetN (); ++i)
+  if (m_satMobilitySGP4Enabled)
     {
-      Ptr<SatUtHandoverModule> ho = CreateObject<SatUtHandoverModule> (m_antennaGainPatterns);
-      Ptr<Node> gwNode = gwNodes.Get (i);
-      NS_LOG_DEBUG ("Created Handover Module " << ho << " for GW node " << gwNode);
-      gwNode->AggregateObject (ho);
+      for (uint32_t i = 0; i < gwNodes.GetN (); ++i)
+        {
+          Ptr<SatUtHandoverModule> ho = CreateObject<SatUtHandoverModule> (m_antennaGainPatterns);
+          Ptr<Node> gwNode = gwNodes.Get (i);
+          NS_LOG_DEBUG ("Created Handover Module " << ho << " for GW node " << gwNode);
+          gwNode->AggregateObject (ho);
+        }
     }
 }
 
@@ -842,7 +859,7 @@ SatHelper::SetGeoSatMobility (Ptr<Node> node)
 }
 
 void
-SatHelper::SetSatMobility (Ptr<Node> node)
+SatHelper::SetLeoSatMobility (Ptr<Node> node)
 {
   NS_LOG_FUNCTION (this);
 
@@ -875,7 +892,7 @@ SatHelper::InstallMobilityObserver (NodeContainer nodes) const
       if (observer == 0)
         {
           Ptr<SatMobilityModel> ownMobility = (*i)->GetObject<SatMobilityModel> ();
-          Ptr<SatMobilityModel> satMobility = m_beamHelper->GetGeoSatNode ()->GetObject<SatMobilityModel> ();
+          Ptr<SatMobilityModel> satMobility = m_beamHelper->GetSatelliteNode ()->GetObject<SatMobilityModel> ();
 
           NS_ASSERT (ownMobility != NULL);
           NS_ASSERT (satMobility != NULL);

@@ -33,6 +33,7 @@
 #include <ns3/satellite-bstp-controller.h>
 #include <ns3/satellite-const-variables.h>
 #include <ns3/satellite-channel.h>
+#include <ns3/satellite-leo-net-device.h>
 #include <ns3/satellite-phy.h>
 #include <ns3/satellite-phy-tx.h>
 #include <ns3/satellite-phy-rx.h>
@@ -47,6 +48,7 @@
 #include <ns3/satellite-fading-input-trace-container.h>
 #include <ns3/satellite-fading-input-trace.h>
 #include <ns3/satellite-id-mapper.h>
+#include "satellite-leo-helper.h"
 #include "satellite-beam-helper.h"
 
 NS_LOG_COMPONENT_DEFINE ("SatBeamHelper");
@@ -188,7 +190,7 @@ SatBeamHelper::SatBeamHelper ()
   NS_FATAL_ERROR ("SatBeamHelper::SatBeamHelper - Constructor not in use");
 }
 
-SatBeamHelper::SatBeamHelper (Ptr<Node> geoNode,
+SatBeamHelper::SatBeamHelper (Ptr<Node> satelliteNode, bool useGeoSatellite,
                               SatTypedefs::CarrierBandwidthConverter_t bandwidthConverterCb,
                               uint32_t rtnLinkCarrierCount,
                               uint32_t fwdLinkCarrierCount,
@@ -207,7 +209,7 @@ SatBeamHelper::SatBeamHelper (Ptr<Node> geoNode,
   m_enableFwdLinkBeamHopping (false),
   m_bstpController ()
 {
-  NS_LOG_FUNCTION (this << geoNode << rtnLinkCarrierCount << fwdLinkCarrierCount << seq);
+  NS_LOG_FUNCTION (this << satelliteNode << rtnLinkCarrierCount << fwdLinkCarrierCount << seq);
 
   // uncomment next code line, if attributes are needed already in construction phase.
   // E.g attributes set by object factory affecting object creation
@@ -262,7 +264,14 @@ SatBeamHelper::SatBeamHelper (Ptr<Node> geoNode,
     }
 
   // create needed low level satellite helpers
-  m_geoHelper = CreateObject<SatGeoHelper> (bandwidthConverterCb, rtnLinkCarrierCount, fwdLinkCarrierCount, seq, geoRaSettings);
+  if (useGeoSatellite)
+    {
+      m_satHelper = CreateObject<SatGeoHelper> (bandwidthConverterCb, rtnLinkCarrierCount, fwdLinkCarrierCount, seq, geoRaSettings);
+    }
+  else
+    {
+      m_satHelper = CreateObject<SatLeoHelper> (bandwidthConverterCb, rtnLinkCarrierCount, fwdLinkCarrierCount, seq, geoRaSettings);
+    }
   m_gwHelper = CreateObject<SatGwHelper> (bandwidthConverterCb, rtnLinkCarrierCount, seq, rtnReadCtrlCb, fwdReserveCtrlCb, fwdSendCtrlCb, gwRaSettings);
   m_utHelper = CreateObject<SatUtHelper> (bandwidthConverterCb, fwdLinkCarrierCount, seq, fwdReadCtrlCb, rtnReserveCtrlCb, rtnSendCtrlCb, utRaSettings);
 
@@ -321,8 +330,8 @@ SatBeamHelper::SatBeamHelper (Ptr<Node> geoNode,
   // DVB-RCS2 link results for RTN link waveform configurations
   m_superframeSeq->GetWaveformConf ()->InitializeEbNoRequirements (linkResultsReturnLink);
 
-  m_geoNode = geoNode;
-  m_geoHelper->Install (m_geoNode);
+  m_satelliteNode = satelliteNode;
+  m_satHelper->Install (m_satelliteNode);
 
   m_ncc = CreateObject<SatNcc> ();
 
@@ -378,7 +387,7 @@ SatBeamHelper::DoDispose ()
   m_beamFreqs.clear ();
   m_markovConf = NULL;
   m_ncc = NULL;
-  m_geoHelper = NULL;
+  m_satHelper = NULL;
   m_gwHelper = NULL;
   m_utHelper = NULL;
   m_antennaGainPatterns = NULL;
@@ -460,7 +469,7 @@ SatBeamHelper::Install (NodeContainer ut,
       feederLink.second->SetAttribute ("RxPowerCalculationMode", EnumValue (SatEnums::RX_PWR_INPUT_TRACE));
     }
 
-  NS_ASSERT (m_geoNode != NULL);
+  NS_ASSERT (m_satelliteNode != NULL);
 
   // Get the position of the GW serving this beam, get the best beam based on antenna patterns
   // for this position, and set the antenna patterns to the feeder PHY objects via
@@ -473,7 +482,7 @@ SatBeamHelper::Install (NodeContainer ut,
     }
 
   // attach channels to geo satellite device
-  m_geoHelper->AttachChannels ( m_geoNode->GetDevice (0),
+  m_satHelper->AttachChannels ( m_satelliteNode->GetDevice (0),
                                 feederLink.first,
                                 feederLink.second,
                                 userLink.first,
@@ -602,10 +611,10 @@ SatBeamHelper::GetGwNode (uint32_t gwId) const
 }
 
 Ptr<Node>
-SatBeamHelper::GetGeoSatNode () const
+SatBeamHelper::GetSatelliteNode () const
 {
   NS_LOG_FUNCTION (this);
-  return m_geoNode;
+  return m_satelliteNode;
 }
 
 Ptr<SatUtHelper>
@@ -626,7 +635,7 @@ Ptr<SatGeoHelper>
 SatBeamHelper::GetGeoHelper () const
 {
   NS_LOG_FUNCTION (this);
-  return m_geoHelper;
+  return m_satHelper;
 }
 
 NodeContainer
@@ -857,7 +866,7 @@ SatBeamHelper::EnableCreationTraces (Ptr<OutputStreamWrapper> stream, CallbackBa
   NS_LOG_FUNCTION (this);
 
   TraceConnect ("Creation", "SatBeamHelper", cb);
-  m_geoHelper->EnableCreationTraces (stream, cb);
+  m_satHelper->EnableCreationTraces (stream, cb);
   m_gwHelper->EnableCreationTraces (stream, cb);
   m_utHelper->EnableCreationTraces (stream, cb);
 }
@@ -1046,7 +1055,7 @@ SatBeamHelper::CreateBeamInfo () const
 
   oss << std::endl << " -- Geo Satellite position --" << std::endl;
 
-  Ptr<SatMobilityModel> model = m_geoNode->GetObject<SatMobilityModel> ();
+  Ptr<SatMobilityModel> model = m_satelliteNode->GetObject<SatMobilityModel> ();
   GeoCoordinate pos = model->GetGeoPosition ();
   oss << "latitude=" << pos.GetLatitude () << ", longitude=" << pos.GetLongitude () << ", altitude=" << pos.GetAltitude () << std::endl;
 
@@ -1295,6 +1304,34 @@ SatEnums::PropagationDelayModel_t
 SatBeamHelper::GetPropagationDelayModelEnum ()
 {
   return m_propagationDelayModel;
+}
+
+
+void
+SatBeamHelper::ConnectGws ()
+{
+  NS_LOG_FUNCTION (this);
+
+  Ptr<SatLeoNetDevice> dev = DynamicCast<SatLeoNetDevice> (m_satelliteNode->GetDevice (0));
+  if (dev != nullptr)
+    {
+      for (auto& entry : m_gwNode)
+        {
+          Ptr<Node> gwNode = entry.second;
+          Ptr<SatNetDevice> gwNetDevice = nullptr;
+          for (uint32_t i = 0; i < gwNode->GetNDevices (); ++i)
+            {
+              gwNetDevice = DynamicCast<SatNetDevice> (gwNode->GetDevice (i));
+              if (gwNetDevice) break;
+            }
+
+          if (gwNetDevice)
+            {
+              Ptr<SatGwMac> mac = DynamicCast<SatGwMac> (gwNetDevice->GetMac ());
+              dev->ConnectGw (entry.first, mac);
+            }
+        }
+    }
 }
 
 

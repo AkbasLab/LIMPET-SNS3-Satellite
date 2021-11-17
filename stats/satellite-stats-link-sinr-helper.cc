@@ -344,9 +344,10 @@ SatStatsFwdFeederLinkSinrHelper::DoInstallProbes ()
 {
   NS_LOG_FUNCTION (this);
 
-  Ptr<Node> geoSat = GetSatHelper ()->GetBeamHelper ()->GetGeoSatNode ();
+  Ptr<Node> geoSat = GetSatHelper ()->GetBeamHelper ()->GetSatelliteNode ();
   NS_ASSERT (geoSat->GetNDevices () == 1);
   Ptr<NetDevice> dev = geoSat->GetDevice (0);
+  // TODO: Handle LEO
   Ptr<SatGeoNetDevice> satGeoDev = dev->GetObject<SatGeoNetDevice> ();
   NS_ASSERT (satGeoDev != 0);
   ObjectMapValue phy;
@@ -569,9 +570,10 @@ SatStatsRtnUserLinkSinrHelper::DoInstallProbes ()
 {
   NS_LOG_FUNCTION (this);
 
-  Ptr<Node> geoSat = GetSatHelper ()->GetBeamHelper ()->GetGeoSatNode ();
+  Ptr<Node> geoSat = GetSatHelper ()->GetBeamHelper ()->GetSatelliteNode ();
   NS_ASSERT (geoSat->GetNDevices () == 1);
   Ptr<NetDevice> dev = geoSat->GetDevice (0);
+  // TODO: Handle LEO
   Ptr<SatGeoNetDevice> satGeoDev = dev->GetObject<SatGeoNetDevice> ();
   NS_ASSERT (satGeoDev != 0);
   ObjectMapValue phy;

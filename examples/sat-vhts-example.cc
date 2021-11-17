@@ -268,7 +268,7 @@ main (int argc, char *argv[])
   // Mobility
   if (utMobility)
     {
-      Ptr<SatMobilityModel> satMobility = satHelper->GetBeamHelper ()->GetGeoSatNode ()->GetObject<SatMobilityModel> ();
+      Ptr<SatMobilityModel> satMobility = satHelper->GetBeamHelper ()->GetSatelliteNode ()->GetObject<SatMobilityModel> ();
       Ptr<Node> node = satHelper->LoadMobileUtFromFile (mobilityPath);
       node->GetObject<SatMobilityModel> ()->TraceConnect ("SatCourseChange", "BeamTracer", MakeCallback (SatCourseChange));
     }

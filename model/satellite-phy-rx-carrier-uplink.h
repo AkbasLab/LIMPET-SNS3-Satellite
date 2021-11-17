@@ -22,7 +22,7 @@
 
 
 #ifndef SATELLITE_PHY_RX_CARRIER_UPLINK_H
-#define SATELLITE_PHY_RX_CARRIER_UPLINK__H
+#define SATELLITE_PHY_RX_CARRIER_UPLINK_H
 
 #include <vector>
 #include <map>

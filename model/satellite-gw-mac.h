@@ -146,6 +146,42 @@ public:
    */
   void SetLogonCallback (SatGwMac::LogonCallback cb);
 
+  /**
+   * Callback to change phy-layer beam ID
+   * \param uint32_t New beam ID to use
+   * \return whether a connection change should occur
+   */
+  typedef Callback<bool, uint32_t> PhyBeamCallback;
+
+  /**
+   * Method to set phy-layer beam handover callback
+   * \param cb callback to invoke whenever a beam handover is considered
+   */
+  void SetBeamCallback (SatGwMac::PhyBeamCallback cb);
+
+  /**
+   * Method to indicate whether this GW is active for a LEO satellite
+   * \param bool whether or not the GW is active
+   */
+  void SetHandleAnyBeam (bool active);
+
+  /**
+   * Callback to signal connection/disconnection to satellite
+   */
+  typedef Callback<void> ConnectionCallback;
+
+  /**
+   * Method to set the connection callback
+   * \param cb the callback to call whenever the connection status of the GW changes
+   */
+  void SetConnectionCallback (SatGwMac::ConnectionCallback cb);
+
+  /**
+   * Method handling beam handover
+   * \param beamId New satellite beam id
+   */
+  void ChangeBeam (uint32_t beamId);
+
 private:
   SatGwMac& operator = (const SatGwMac &);
   SatGwMac (const SatGwMac &);
@@ -210,6 +246,21 @@ private:
    * Callback to log a terminal on
    */
   SatGwMac::LogonCallback m_logonCallback;
+
+  /**
+   * Callback to change phy-layer beam ID
+   */
+  SatGwMac::PhyBeamCallback m_beamCallback;
+
+  /**
+   * Consider this GW as active for a LEO satellite
+   */
+  bool m_isActive;
+
+  /**
+   * Callback to signal connection/disconnection to satellite
+   */
+  SatGwMac::ConnectionCallback m_connectionCallback;
 };
 
 } // namespace ns3

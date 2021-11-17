@@ -225,9 +225,9 @@ public:
   {
     return m_beamHelper->GetUtNodes ();
   }
-  inline Ptr<Node> GeoSatNode ()
+  inline Ptr<Node> SatNode ()
   {
-    return m_beamHelper->GetGeoSatNode ();
+    return m_beamHelper->GetSatelliteNode ();
   }
 
   /**
@@ -481,7 +481,7 @@ private:
    *
    * \param node node pointer of Satellite to set mobility
    */
-  void SetSatMobility (Ptr<Node> node);
+  void SetLeoSatMobility (Ptr<Node> node);
 
   /**
    * Sets mobility to created UT nodes.
