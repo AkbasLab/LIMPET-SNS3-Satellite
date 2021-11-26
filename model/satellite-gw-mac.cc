@@ -102,6 +102,8 @@ SatGwMac::DoDispose ()
   m_logonCallback.Nullify ();
   m_beamCallback.Nullify ();
   m_connectionCallback.Nullify ();
+  m_handoverSendCallback.Nullify ();
+  m_handoverGwCallback.Nullify ();
 
   SatMac::DoDispose ();
 }
@@ -429,8 +431,7 @@ SatGwMac::SetHandleAnyBeam ()
   NS_LOG_FUNCTION (this);
   m_activity = SatGwMac::SAT_LEO_CONNECTED;
 
-  Mac48Address broadcast = Mac48Address::GetBroadcast ();
-  m_handoverCallback (broadcast, m_beamId, 0);
+  m_handoverGwCallback (m_beamId, m_nodeInfo->GetMacAddress (), m_handoverSendCallback);
 }
 
 void
@@ -456,6 +457,14 @@ SatGwMac::SetHandoverCallback (SatGwMac::HandoverCallback cb)
 {
   NS_LOG_FUNCTION (this << &cb);
   m_handoverCallback = cb;
+}
+
+void
+SatGwMac::SetHandoverGwCallback (SatNcc::SendCallback nccCb, SatGwMac::HandoverGwCallback gwCb)
+{
+  NS_LOG_FUNCTION (this << &nccCb << &gwCb);
+  m_handoverSendCallback = nccCb;
+  m_handoverGwCallback = gwCb;
 }
 
 void

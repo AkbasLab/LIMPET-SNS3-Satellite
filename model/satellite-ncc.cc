@@ -365,6 +365,26 @@ SatNcc::DoMoveUtBetweenBeams (Address utId, uint32_t srcBeamId, uint32_t destBea
 }
 
 void
+SatNcc::MoveGwBetweenBeams (uint32_t srcBeamId, Address gwId, SatBeamScheduler::SendCtrlMsgCallback txCallback)
+{
+  Ptr<SatBeamScheduler> scheduler = GetBeamScheduler (srcBeamId);
+  if (!scheduler)
+    {
+      NS_FATAL_ERROR ("Source beam does not exist!");
+    }
+
+  NS_LOG_INFO ("Source beam now handles everyone, tell them to change their GW address");
+  scheduler->GwHandover (gwId, txCallback);
+  for (auto& destinationEntry : m_beamSchedulers)
+    {
+      if (srcBeamId != destinationEntry.first)
+        {
+          destinationEntry.second->TransferGwToBeam (scheduler);
+        }
+    }
+}
+
+void
 SatNcc::MoveUtBetweenBeams (Address utId, uint32_t srcBeamId, uint32_t destBeamId)
 {
   NS_LOG_FUNCTION (this << utId << srcBeamId << destBeamId);
@@ -379,24 +399,10 @@ SatNcc::MoveUtBetweenBeams (Address utId, uint32_t srcBeamId, uint32_t destBeamI
 
   if (!destination)
     {
-      if (destBeamId == 0)
-        {
-          NS_LOG_INFO ("Source beam now handles everyone, tell them to change their GW address");
+      NS_LOG_WARN ("Destination beam does not exist, cancel handover");
 
-          for (auto& destinationEntry : m_beamSchedulers)
-            {
-              Ptr<SatTimuMessage> timuMsg = scheduler->CreateTimu ();
-              timuMsg->SetAllocatedBeamId (destinationEntry.first);
-              destinationEntry.second->SendTo (timuMsg, utId);
-            }
-        }
-      else
-        {
-          NS_LOG_WARN ("Destination beam does not exist, cancel handover");
-
-          Ptr<SatTimuMessage> timuMsg = scheduler->CreateTimu ();
-          scheduler->SendTo (timuMsg, utId);
-        }
+      Ptr<SatTimuMessage> timuMsg = scheduler->CreateTimu ();
+      scheduler->SendTo (timuMsg, utId);
     }
   else if (scheduler->HasUt (utId) && !destination->HasUt (utId))
     {

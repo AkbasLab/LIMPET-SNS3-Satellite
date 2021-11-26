@@ -27,6 +27,7 @@
 #include <ns3/nstime.h>
 #include <ns3/satellite-mac.h>
 #include <ns3/satellite-phy.h>
+#include <ns3/satellite-ncc.h>
 
 namespace ns3 {
 
@@ -131,6 +132,10 @@ public:
    * \param cb callback to invoke whenever a handover recommendation is received
    */
   void SetHandoverCallback (SatGwMac::HandoverCallback cb);
+
+  typedef Callback<void, uint32_t, Address, SatNcc::SendCallback> HandoverGwCallback;
+
+  void SetHandoverGwCallback (SatNcc::SendCallback nccCb, SatGwMac::HandoverGwCallback gwCb);
 
   /**
    * Callback to register UT logon
@@ -267,6 +272,10 @@ private:
    * Callback to signal connection/disconnection to satellite
    */
   SatGwMac::ConnectionCallback m_connectionCallback;
+
+  SatNcc::SendCallback m_handoverSendCallback;
+
+  SatGwMac::HandoverGwCallback m_handoverGwCallback;
 };
 
 } // namespace ns3

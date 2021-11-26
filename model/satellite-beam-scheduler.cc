@@ -585,8 +585,22 @@ SatBeamScheduler::Schedule ()
   m_exceedingCapacityTrace (exceedingCapacity);
   ++m_superFrameCounter;
 
-  // re-schedule next TBTP sending (call of this function)
-  Simulator::Schedule ( m_superframeSeq->GetDuration (SatConstVariables::SUPERFRAME_SEQUENCE), &SatBeamScheduler::Schedule, this);
+  if (m_handoverGwBeam == nullptr)
+    {
+      // re-schedule next TBTP sending (call of this function)
+      Simulator::Schedule ( m_superframeSeq->GetDuration (SatConstVariables::SUPERFRAME_SEQUENCE), &SatBeamScheduler::Schedule, this);
+    }
+  else
+    {
+      Initialize (
+          m_handoverGwBeam->m_beamId,
+          m_handoverGwBeam->m_txCallback,
+          m_handoverGwBeam->m_superframeSeq,
+          m_handoverGwBeam->m_maxBbFrameSize,
+          m_handoverGwBeam->m_gwAddress);
+      m_handoverGwBeam = nullptr;
+      Send (CreateTimu ());
+    }
 }
 
 void
@@ -849,6 +863,24 @@ SatBeamScheduler::TransferUtToBeam (Address utId, Ptr<SatBeamScheduler> destinat
           NS_FATAL_ERROR ("Unknown handover strategy");
         }
     }
+}
+
+void
+SatBeamScheduler::TransferGwToBeam (Ptr<SatBeamScheduler> source)
+{
+  NS_LOG_FUNCTION (this << source);
+
+  m_handoverGwBeam = source;
+}
+
+void
+SatBeamScheduler::GwHandover (Address gwId, SatBeamScheduler::SendCtrlMsgCallback cb)
+{
+  NS_LOG_FUNCTION (this << gwId << &cb);
+
+  m_txCallback = cb;
+  m_gwAddress = gwId;
+  Send (CreateTimu ());
 }
 
 Ptr<SatTimuMessage>

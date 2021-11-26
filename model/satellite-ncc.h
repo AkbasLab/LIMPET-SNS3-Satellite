@@ -186,6 +186,8 @@ public:
    */
   void MoveUtBetweenBeams (Address utId, uint32_t srcBeamId, uint32_t destBeamId);
 
+  void MoveGwBetweenBeams (uint32_t srcBeamId, Address gwId, SatBeamScheduler::SendCtrlMsgCallback txCallback);
+
   /**
    * \brief Update routes and ARP tables on gateways after a terminal handover
    * \param Address address of the UT whose handover is completed

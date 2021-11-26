@@ -230,6 +230,14 @@ public:
    */
   void TransferUtToBeam (Address utId, Ptr<SatBeamScheduler> destination);
 
+  /**
+   * \brief Transfer this beam to the GW that is currently handling the given SatBeamScheduler
+   * \param source the beam that references connection parameters to take care of
+   */
+  void TransferGwToBeam (Ptr<SatBeamScheduler> source);
+
+  void GwHandover (Address gwId, SatBeamScheduler::SendCtrlMsgCallback cb);
+
   void ReserveLogonChannel (uint32_t logonChannelId);
 
   /**
@@ -575,6 +583,8 @@ private:
   Address m_gwAddress;
 
   HandoverInformationForward_t m_handoverStrategy;
+
+  Ptr<SatBeamScheduler> m_handoverGwBeam;
 
   /**
    * Type of SatSuperframeAllocator class to use

@@ -548,11 +548,11 @@ SatBeamHelper::Install (NodeContainer ut,
   uint32_t maxBbFrameDataSizeInBytes = ( bbFrameConf->GetBbFramePayloadBits (bbFrameConf->GetMostRobustModcod (frameType), frameType) / SatConstVariables::BITS_PER_BYTE ) - bbFrameConf->GetBbFrameHeaderSizeInBytes ();
 
 
-  m_ncc->AddBeam (beamId,
-                  MakeCallback (&SatNetDevice::SendControlMsg, DynamicCast<SatNetDevice> (gwNd)),
-                  m_superframeSeq,
-                  maxBbFrameDataSizeInBytes,
-                  gwNd->GetAddress ());
+  SatNcc::SendCallback ctrlMsgCallback = MakeCallback (&SatNetDevice::SendControlMsg, DynamicCast<SatNetDevice> (gwNd));
+  m_ncc->AddBeam (beamId, ctrlMsgCallback, m_superframeSeq, maxBbFrameDataSizeInBytes, gwNd->GetAddress ());
+
+  Ptr<SatGwMac> mac = DynamicCast<SatGwMac> (DynamicCast<SatNetDevice> (gwNd)->GetMac ());
+  mac->SetHandoverGwCallback (ctrlMsgCallback, MakeCallback (&SatNcc::MoveGwBetweenBeams, m_ncc));
 
   if (m_bstpController)
     {
