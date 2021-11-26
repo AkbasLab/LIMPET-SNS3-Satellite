@@ -28,6 +28,7 @@
 
 #include <ns3/node.h>
 #include <ns3/satellite-geo-net-device.h>
+#include <ns3/satellite-leo-net-device.h>
 #include <ns3/satellite-phy.h>
 #include <ns3/satellite-phy-rx.h>
 #include <ns3/satellite-phy-rx-carrier.h>
@@ -347,11 +348,19 @@ SatStatsFwdFeederLinkRxPowerHelper::DoInstallProbes ()
   Ptr<Node> geoSat = GetSatHelper ()->GetBeamHelper ()->GetSatelliteNode ();
   NS_ASSERT (geoSat->GetNDevices () == 1);
   Ptr<NetDevice> dev = geoSat->GetDevice (0);
-  // TODO: Handle LEO
-  Ptr<SatGeoNetDevice> satGeoDev = dev->GetObject<SatGeoNetDevice> ();
-  NS_ASSERT (satGeoDev != 0);
+
   ObjectMapValue phy;
-  satGeoDev->GetAttribute ("FeederPhy", phy);
+  Ptr<SatGeoNetDevice> satGeoDev = dev->GetObject<SatGeoNetDevice> ();
+  if (satGeoDev == nullptr)
+    {
+      Ptr<SatLeoNetDevice> satLeoDev = dev->GetObject<SatLeoNetDevice> ();
+      NS_ASSERT (satLeoDev != 0);
+      satLeoDev->GetAttribute ("FeederPhy", phy);
+    }
+  else
+    {
+      satGeoDev->GetAttribute ("FeederPhy", phy);
+    }
   NS_LOG_DEBUG (this << " GeoSat Node ID " << geoSat->GetId ()
                      << " device #" << dev->GetIfIndex ()
                      << " has " << phy.GetN () << " PHY instance(s)");
@@ -573,11 +582,19 @@ SatStatsRtnUserLinkRxPowerHelper::DoInstallProbes ()
   Ptr<Node> geoSat = GetSatHelper ()->GetBeamHelper ()->GetSatelliteNode ();
   NS_ASSERT (geoSat->GetNDevices () == 1);
   Ptr<NetDevice> dev = geoSat->GetDevice (0);
-  // TODO: Handle LEO
-  Ptr<SatGeoNetDevice> satGeoDev = dev->GetObject<SatGeoNetDevice> ();
-  NS_ASSERT (satGeoDev != 0);
+
   ObjectMapValue phy;
-  satGeoDev->GetAttribute ("UserPhy", phy);
+  Ptr<SatGeoNetDevice> satGeoDev = dev->GetObject<SatGeoNetDevice> ();
+  if (satGeoDev == nullptr)
+    {
+      Ptr<SatLeoNetDevice> satLeoDev = dev->GetObject<SatLeoNetDevice> ();
+      NS_ASSERT (satLeoDev != 0);
+      satLeoDev->GetAttribute ("FeederPhy", phy);
+    }
+  else
+    {
+      satGeoDev->GetAttribute ("FeederPhy", phy);
+    }
   NS_LOG_DEBUG (this << " GeoSat Node ID " << geoSat->GetId ()
                      << " device #" << dev->GetIfIndex ()
                      << " has " << phy.GetN () << " PHY instance(s)");
