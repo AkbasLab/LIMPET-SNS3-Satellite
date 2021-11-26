@@ -343,7 +343,7 @@ SatPhyRxCarrier::GetReceiveParams (Ptr<SatSignalParameters> rxParams)
 }
 
 
-void
+bool
 SatPhyRxCarrier::StartRx (Ptr<SatSignalParameters> rxParams)
 {
   NS_LOG_FUNCTION (this << rxParams);
@@ -396,6 +396,8 @@ SatPhyRxCarrier::StartRx (Ptr<SatSignalParameters> rxParams)
             Simulator::Schedule (rxParams->m_duration, &SatPhyRxCarrier::EndRxData, this, key);
 
             IncreaseNumOfRxState (rxParams->m_txInfo.packetType);
+
+            return true;
           }
         break;
       }
@@ -405,6 +407,8 @@ SatPhyRxCarrier::StartRx (Ptr<SatSignalParameters> rxParams)
         break;
       }
     }
+
+  return false;
 }
 
 
@@ -573,13 +577,6 @@ SatPhyRxCarrier::CalculateSinr (double rxPowerW,
 {
   NS_LOG_FUNCTION (this << rxPowerW <<  ifPowerW);
 
-  // std::cout << "Carrier \t" << m_rxTemperatureK << std::endl;
-
-  // std::cout << rxPowerW << " " << ifPowerW << " " << rxNoisePowerW << " " << rxAciIfPowerW << " " << rxExtNoisePowerW << std::endl;
-
-  // std::cout << "C/N   " << rxPowerW / rxNoisePowerW << std::endl; // C/N
-  // std::cout << "C/N0  " << m_rxBandwidthHz * rxPowerW / rxNoisePowerW; // C/N0
-
   if (rxNoisePowerW <= 0.0)
     {
       NS_FATAL_ERROR ("Noise power must be greater than zero!!!");
@@ -592,9 +589,7 @@ SatPhyRxCarrier::CalculateSinr (double rxPowerW,
   // Call PHY calculator to composite C over I interference configured to PHY.
   double finalSinr = sinrCalculate (sinr);
 
-  // std::cout << ", \tsinr  " << finalSinr << std::endl;
-
-  return (finalSinr);
+  return finalSinr;
 }
 
 double
