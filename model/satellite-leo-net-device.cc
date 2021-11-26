@@ -316,6 +316,9 @@ SatLeoNetDevice::ConnectGw (uint32_t gwId, Ptr<SatGwMac> mac)
 
   if (shouldConnect && inserted.second)
     {
+      m_activeGw = gwId;
+      mac->SetHandleAnyBeam ();
+
       for (auto& entry : m_userPhy)
         {
           Ptr<SatLeoUserPhy> phy = DynamicCast<SatLeoUserPhy> (entry.second);
@@ -324,9 +327,6 @@ SatLeoNetDevice::ConnectGw (uint32_t gwId, Ptr<SatGwMac> mac)
               phy->SetConnected (true);
             }
         }
-
-      m_activeGw = gwId;
-      mac->SetHandleAnyBeam (true);
     }
 }
 
@@ -335,34 +335,35 @@ SatLeoNetDevice::DisconnectGw (uint32_t gwId, Ptr<SatGwMac> mac)
 {
   NS_LOG_FUNCTION (this << gwId << mac);
 
-  mac->SetHandleAnyBeam (false);
   mac->SetConnectionCallback (MakeBoundCallback (&ConnectGwHelper, this, gwId, mac));
 
   auto gw = m_connectedGw.find (gwId);
-  if (gw != m_connectedGw.end ())
+  if (gw == m_connectedGw.end ())
     {
-      m_connectedGw.erase (gw);
-      if (m_connectedGw.empty ())
+      NS_FATAL_ERROR ("SatLeoNetDevice::DisconnectGw: Cannot find the connected GW " << gwId << " in internal map");
+    }
+
+  m_connectedGw.erase (gw);
+  if (m_connectedGw.empty ())
+    {
+      m_activeGw = 0;
+      for (auto& entry : m_userPhy)
         {
-          m_activeGw = 0;
-          for (auto& entry : m_userPhy)
+          Ptr<SatLeoUserPhy> phy = DynamicCast<SatLeoUserPhy> (entry.second);
+          if (phy)
             {
-              Ptr<SatLeoUserPhy> phy = DynamicCast<SatLeoUserPhy> (entry.second);
-              if (phy)
-                {
-                  phy->SetConnected (false);
-                }
+              phy->SetConnected (false);
             }
         }
-      else if (m_activeGw == gwId)
+    }
+  else if (m_activeGw == gwId)
+    {
+      // Find any connected GW and turn it active
+      for (auto& entry : m_connectedGw)
         {
-          // Find any connected GW and turn it active
-          for (auto& entry : m_connectedGw)
-            {
-              m_activeGw = entry.first;
-              entry.second->SetHandleAnyBeam (true);
-              break;
-            }
+          m_activeGw = entry.first;
+          entry.second->SetHandleAnyBeam ();
+          break;
         }
     }
 }

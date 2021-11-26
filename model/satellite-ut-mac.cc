@@ -957,11 +957,8 @@ SatUtMac::ReceiveSignalingPacket (Ptr<Packet> packet)
             uint32_t beamId = timuMsg->GetAllocatedBeamId ();
             NS_LOG_INFO ("UT: " << m_nodeInfo->GetMacAddress () <<
                          " switching from beam " << m_beamId << " to beam " << beamId);
-            if (m_beamId != beamId)
-              {
-                NS_LOG_INFO ("Storing TIM-U information internally for later");
-                m_timuInfo = Create<SatTimuInfo> (beamId, timuMsg->GetGwAddress ());
-              }
+            NS_LOG_INFO ("Storing TIM-U information internally for later");
+            m_timuInfo = Create<SatTimuInfo> (beamId, timuMsg->GetGwAddress ());
           }
         else
           {
@@ -1585,20 +1582,31 @@ SatUtMac::DoFrameStart ()
 
   NS_LOG_INFO ("UT: " << m_nodeInfo->GetMacAddress ());
 
+  bool stateChanged = false;
   if (m_timuInfo != NULL)
     {
       NS_LOG_INFO ("Applying TIM-U parameters received during the previous frame");
 
-      m_beamId = m_timuInfo->GetBeamId ();
       Address gwAddress = m_timuInfo->GetGwAddress ();
       Mac48Address gwAddress48 = Mac48Address::ConvertFrom (gwAddress);
       if (gwAddress48 != m_gwAddress)
         {
           SetGwAddress (gwAddress48);
           m_routingUpdateCallback (m_nodeInfo->GetMacAddress (), gwAddress);
+          stateChanged = true;
         }
-      m_handoverCallback (m_beamId);
 
+      uint32_t beamId = m_timuInfo->GetBeamId ();
+      if (m_beamId != beamId)
+        {
+          m_beamId = beamId;
+          m_handoverCallback (m_beamId);
+          stateChanged = true;
+        }
+    }
+
+  if (stateChanged)
+    {
       m_tbtpContainer->Clear ();
       m_handoverState = WAITING_FOR_TBTP;
       m_timuInfo = NULL;

@@ -72,7 +72,7 @@ SatGwMac::SatGwMac ()
   : SatMac (),
   m_fwdScheduler (),
   m_guardTime (MicroSeconds (1)),
-  m_isActive (false)
+  m_activity (SatGwMac::SAT_GEO)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -81,7 +81,7 @@ SatGwMac::SatGwMac (uint32_t beamId)
   : SatMac (beamId),
   m_fwdScheduler (),
   m_guardTime (MicroSeconds (1)),
-  m_isActive (false)
+  m_activity (SatGwMac::SAT_GEO)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -131,6 +131,11 @@ SatGwMac::Receive (SatPhy::PacketContainer_t packets, Ptr<SatSignalParameters> /
 {
   NS_LOG_FUNCTION (this);
 
+  if (m_activity == SatGwMac::SAT_LEO_DISCONNECTED)
+    {
+      return;
+    }
+
   // Add packet trace entry:
   m_packetTrace (Simulator::Now (),
                  SatEnums::PACKET_RECV,
@@ -160,7 +165,7 @@ SatGwMac::Receive (SatPhy::PacketContainer_t packets, Ptr<SatSignalParameters> /
       // If the packet is intended for this receiver
       Mac48Address destAddress = macTag.GetDestAddress ();
 
-      if (destAddress == m_nodeInfo->GetMacAddress () || destAddress.IsBroadcast ())
+      if (m_activity == SatGwMac::SAT_LEO_CONNECTED || destAddress == m_nodeInfo->GetMacAddress () || destAddress.IsBroadcast ())
         {
           // Peek control msg tag
           SatControlMsgTag ctrlTag;
@@ -419,10 +424,13 @@ SatGwMac::SendLogonResponseHelper (SatGwMac* self, Address utId, uint32_t raChan
 }
 
 void
-SatGwMac::SetHandleAnyBeam (bool active)
+SatGwMac::SetHandleAnyBeam ()
 {
-  NS_LOG_FUNCTION (this << active);
-  m_isActive = active;
+  NS_LOG_FUNCTION (this);
+  m_activity = SatGwMac::SAT_LEO_CONNECTED;
+
+  Mac48Address broadcast = Mac48Address::GetBroadcast ();
+  m_handoverCallback (broadcast, m_beamId, 0);
 }
 
 void
@@ -469,6 +477,7 @@ SatGwMac::SetConnectionCallback (SatGwMac::ConnectionCallback cb)
 {
   NS_LOG_FUNCTION (this << &cb);
   m_connectionCallback = cb;
+  m_activity = SatGwMac::SAT_LEO_DISCONNECTED;
 }
 
 } // namespace ns3

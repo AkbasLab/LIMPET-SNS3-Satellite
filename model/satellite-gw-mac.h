@@ -160,10 +160,9 @@ public:
   void SetBeamCallback (SatGwMac::PhyBeamCallback cb);
 
   /**
-   * Method to indicate whether this GW is active for a LEO satellite
-   * \param bool whether or not the GW is active
+   * Method to indicate that a LEO satellite will communicate with this GW
    */
-  void SetHandleAnyBeam (bool active);
+  void SetHandleAnyBeam ();
 
   /**
    * Callback to signal connection/disconnection to satellite
@@ -252,10 +251,17 @@ private:
    */
   SatGwMac::PhyBeamCallback m_beamCallback;
 
+  enum ActivityType
+  {
+    SAT_GEO,
+    SAT_LEO_CONNECTED,
+    SAT_LEO_DISCONNECTED,
+  };
+
   /**
    * Consider this GW as active for a LEO satellite
    */
-  bool m_isActive;
+  SatGwMac::ActivityType m_activity;
 
   /**
    * Callback to signal connection/disconnection to satellite

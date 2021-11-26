@@ -379,10 +379,24 @@ SatNcc::MoveUtBetweenBeams (Address utId, uint32_t srcBeamId, uint32_t destBeamI
 
   if (!destination)
     {
-      NS_LOG_WARN ("Destination beam does not exist, cancel handover");
+      if (destBeamId == 0)
+        {
+          NS_LOG_INFO ("Source beam now handles everyone, tell them to change their GW address");
 
-      Ptr<SatTimuMessage> timuMsg = scheduler->CreateTimu ();
-      scheduler->SendTo (timuMsg, utId);
+          for (auto& destinationEntry : m_beamSchedulers)
+            {
+              Ptr<SatTimuMessage> timuMsg = scheduler->CreateTimu ();
+              timuMsg->SetAllocatedBeamId (destinationEntry.first);
+              destinationEntry.second->SendTo (timuMsg, utId);
+            }
+        }
+      else
+        {
+          NS_LOG_WARN ("Destination beam does not exist, cancel handover");
+
+          Ptr<SatTimuMessage> timuMsg = scheduler->CreateTimu ();
+          scheduler->SendTo (timuMsg, utId);
+        }
     }
   else if (scheduler->HasUt (utId) && !destination->HasUt (utId))
     {
