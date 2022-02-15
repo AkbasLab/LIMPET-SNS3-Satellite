@@ -21,6 +21,7 @@
 #include "ns3/log.h"
 #include "ns3/test.h"
 #include "ns3/simulator.h"
+#include "../model/satellite-constant-position-mobility-model.h"
 #include "../model/satellite-antenna-gain-pattern.h"
 #include "../model/satellite-antenna-gain-pattern-container.h"
 #include "ns3/singleton.h"
@@ -65,6 +66,12 @@ SatAntennaPatternTestCase::DoRun (void)
 
   // Create antenna gain container
   SatAntennaGainPatternContainer gpContainer;
+
+  // Initialize with satellite position
+  GeoCoordinate geoSat = GeoCoordinate (0.0, 33.0, 35786000);
+  Ptr<SatMobilityModel> geoMobility = CreateObject<SatConstantPositionMobilityModel> ();
+  geoMobility->SetGeoPosition (geoSat);
+  gpContainer.ConfigureBeamsMobility (geoMobility);
 
   // Test positions (= GW positions from 72 spot-beam reference system)
   std::vector<GeoCoordinate> coordinates;

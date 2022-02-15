@@ -230,7 +230,7 @@ SatHelper::SatHelper ()
       SetGeoSatMobility (satelliteNode);
     }
 
-  m_beamHelper = CreateObject<SatBeamHelper> (satelliteNode, m_satMobilitySGP4Enabled,
+  m_beamHelper = CreateObject<SatBeamHelper> (satelliteNode, !m_satMobilitySGP4Enabled,
                                               MakeCallback (&SatConf::GetCarrierBandwidthHz, m_satConf),
                                               m_satConf->GetRtnLinkCarrierCount (),
                                               m_satConf->GetFwdLinkCarrierCount (),
