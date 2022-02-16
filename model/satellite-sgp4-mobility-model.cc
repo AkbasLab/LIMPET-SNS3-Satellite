@@ -152,12 +152,13 @@ SatSGP4MobilityModel::DoGetGeoPosition () const
 {
   NS_LOG_FUNCTION (this);
 
-  if ( (m_updatePositionEachRequest == false) && (Simulator::Now () < m_timeLastUpdate + m_updatePositionPeriod) )
+  const Time now = Simulator::Now ();
+  if (now == m_timeLastUpdate || (!m_updatePositionEachRequest && now < m_timeLastUpdate + m_updatePositionPeriod))
     {
       return m_lastPosition;
     }
 
-  m_timeLastUpdate = Simulator::Now ();
+  m_timeLastUpdate = now;
   JulianDate cur = m_start + m_timeLastUpdate;
 
   double r[3], v[3];

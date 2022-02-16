@@ -476,9 +476,11 @@ SatBeamHelper::Install (NodeContainer ut,
   // AttachChannels method.
   GeoCoordinate gwPos = gwNode->GetObject<SatMobilityModel> ()->GetGeoPosition ();
   uint32_t feederBeamId = m_antennaGainPatterns->GetBestBeamId (gwPos);
-  if (!feederBeamId)
+  Ptr<SatAntennaGainPattern> feederAgp = nullptr;
+  if (feederBeamId)
     {
-      NS_FATAL_ERROR ("SatBeamHelper::Install Feeder position out of range for satellite coverage.");
+      feederAgp = m_antennaGainPatterns->GetAntennaGainPattern (feederBeamId);
+      // NS_FATAL_ERROR ("SatBeamHelper::Install Feeder position out of range for satellite coverage.");
     }
 
   // attach channels to geo satellite device
@@ -488,7 +490,7 @@ SatBeamHelper::Install (NodeContainer ut,
                                 userLink.first,
                                 userLink.second,
                                 m_antennaGainPatterns->GetAntennaGainPattern (beamId),
-                                m_antennaGainPatterns->GetAntennaGainPattern (feederBeamId),
+                                feederAgp,
                                 beamId);
 
   // store GW node

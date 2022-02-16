@@ -199,8 +199,11 @@ SatGeoHelper::AttachChannels (Ptr<NetDevice> d, Ptr<SatChannel> ff, Ptr<SatChann
 {
   NS_LOG_FUNCTION (this << d << ff << fr << uf << ur << userAgp << feederAgp << userBeamId);
 
+  if (!feederAgp) {
+      NS_FATAL_ERROR ("SatGeoHelper::AttachChannels Feeder position out of range for satellite coverage.");
+  }
+
   Ptr<SatGeoNetDevice> dev = DynamicCast<SatGeoNetDevice> (d);
-  //Ptr<MobilityModel> mobility = dev->GetNode()->GetObject<MobilityModel>();
 
   SatPhy::CreateParam_t params;
   params.m_beamId = userBeamId;
